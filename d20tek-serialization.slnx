@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/.plans/">
+    <File Path=".plans/features-v1-tasks.md" />
     <File Path=".plans/features-v1.md" />
   </Folder>
   <Folder Name="/src/">
