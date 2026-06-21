@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/.plans/">
+    <File Path=".plans/features-v1.md" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/D20Tek.Serialization.Core/D20Tek.Serialization.Core.csproj" />
+  </Folder>
+</Solution>
