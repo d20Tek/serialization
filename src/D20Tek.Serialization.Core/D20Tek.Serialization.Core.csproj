@@ -2,8 +2,29 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
+    <IsAotCompatible>true</IsAotCompatible>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Title>D20Tek.Serialization.Core</Title>
+    <Description>Shared abstractions, metadata, converters, DOM, and source-generator contracts for the D20Tek.Serialization platform. This is the format-agnostic core used by all D20Tek serializers.</Description>
+    <PackageTags>serialization; serializer; core; converters; source generator; AOT; DOM</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="D20Tek.Serialization.Core.Tests" />
+    <InternalsVisibleTo Include="D20Tek.Serialization.Binary" />
+    <InternalsVisibleTo Include="D20Tek.Serialization.Binary.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\D20Tek.Serialization.Generator\D20Tek.Serialization.Generator.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false" />
+  </ItemGroup>
 
 </Project>

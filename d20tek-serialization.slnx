@@ -3,7 +3,17 @@
     <File Path=".plans/features-v1-tasks.md" />
     <File Path=".plans/features-v1.md" />
   </Folder>
+  <Folder Name="/samples/">
+    <Project Path="samples/D20Tek.Serialization.Binary.Sample/D20Tek.Serialization.Binary.Sample.csproj" />
+  </Folder>
   <Folder Name="/src/">
+    <Project Path="src/D20Tek.Serialization.Binary/D20Tek.Serialization.Binary.csproj" />
     <Project Path="src/D20Tek.Serialization.Core/D20Tek.Serialization.Core.csproj" />
+    <Project Path="src/D20Tek.Serialization.Generator/D20Tek.Serialization.Generator.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/D20Tek.Serialization.Binary.Tests/D20Tek.Serialization.Binary.Tests.csproj" />
+    <Project Path="tests/D20Tek.Serialization.Core.Tests/D20Tek.Serialization.Core.Tests.csproj" />
+    <Project Path="tests/D20Tek.Serialization.Generator.Tests/D20Tek.Serialization.Generator.Tests.csproj" />
   </Folder>
 </Solution>

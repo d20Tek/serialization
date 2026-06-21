@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsAotCompatible>true</IsAotCompatible>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Title>D20Tek.Serialization.Binary</Title>
+    <Description>A CBOR-based binary serializer for the D20Tek.Serialization platform. Provides AOT-friendly source generation, reflection fallback, strict/lenient decoding, zero-copy reading, advanced error reporting, and a binary DOM (BinaryDocument / BinaryElement).</Description>
+    <PackageTags>serialization; serializer; binary; CBOR; AOT; zero-copy; DOM</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Formats.Cbor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\D20Tek.Serialization.Core\D20Tek.Serialization.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\D20Tek.Serialization.Generator\D20Tek.Serialization.Generator.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="D20Tek.Serialization.Binary.Tests" />
+  </ItemGroup>
+
+</Project>

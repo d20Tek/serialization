@@ -32,17 +32,17 @@ Out of scope for v1.0: YAML/TOML/CSV and other formats (architecture must allow 
 The repo currently contains only `src/D20Tek.Serialization.Core` with a placeholder `Class1.cs`.
 These tasks establish the project layout that the rest of the plan depends on.
 
-- [ ] **1.1** Add `Directory.Build.props` at repo root (shared `LangVersion`, `Nullable=enable`, `ImplicitUsings=enable`, `TreatWarningsAsErrors`, deterministic build, package metadata defaults).
-- [ ] **1.2** Add `Directory.Packages.props` for Central Package Management (pin `System.Formats.Cbor`, test deps, source-gen testing deps).
-- [ ] **1.3** Remove placeholder `src/D20Tek.Serialization.Core/Class1.cs`.
-- [ ] **1.4** Create project `src/D20Tek.Serialization.Binary/D20Tek.Serialization.Binary.csproj` (`net10.0`), referencing Core.
-- [ ] **1.5** Create source-generator project `src/D20Tek.Serialization.Generator/D20Tek.Serialization.Generator.csproj` (`netstandard2.0`, `Microsoft.CodeAnalysis.CSharp`, analyzer packaging).
-- [ ] **1.6** Wire the generator into Core/Binary as an analyzer (`OutputItemType="Analyzer"`, `ReferenceOutputAssembly="false"`).
-- [ ] **1.7** Create `tests/D20Tek.Serialization.Core.Tests` (MSTest per house style; add coverage collector).
-- [ ] **1.8** Create `tests/D20Tek.Serialization.Binary.Tests`.
-- [ ] **1.9** Create `tests/D20Tek.Serialization.Generator.Tests` (uses `Microsoft.CodeAnalysis.*.Testing` / snapshot verification).
-- [ ] **1.10** Create `samples/D20Tek.Serialization.Binary.Sample` console app (used for AOT publish validation).
-- [ ] **1.11** Update `d20tek-serialization.slnx` to include all new projects and the tasks doc.
+- [x] **1.1** Add `Directory.Build.props` at repo root (shared `LangVersion`, `Nullable=enable`, `ImplicitUsings=enable`, `TreatWarningsAsErrors`, deterministic build, package metadata defaults).
+- [x] **1.2** Add `Directory.Packages.props` for Central Package Management (pin `System.Formats.Cbor`, test deps, source-gen testing deps).
+- [x] **1.3** Remove placeholder `src/D20Tek.Serialization.Core/Class1.cs`.
+- [x] **1.4** Create project `src/D20Tek.Serialization.Binary/D20Tek.Serialization.Binary.csproj` (`net10.0`), referencing Core.
+- [x] **1.5** Create source-generator project `src/D20Tek.Serialization.Generator/D20Tek.Serialization.Generator.csproj` (`netstandard2.0`, `Microsoft.CodeAnalysis.CSharp`, analyzer packaging).
+- [x] **1.6** Wire the generator into Core/Binary as an analyzer (`OutputItemType="Analyzer"`, `ReferenceOutputAssembly="false"`).
+- [x] **1.7** Create `tests/D20Tek.Serialization.Core.Tests` (MSTest per house style; add coverage collector).
+- [x] **1.8** Create `tests/D20Tek.Serialization.Binary.Tests`.
+- [x] **1.9** Create `tests/D20Tek.Serialization.Generator.Tests` (uses `Microsoft.CodeAnalysis.*.Testing` / snapshot verification).
+- [x] **1.10** Create `samples/D20Tek.Serialization.Binary.Sample` console app (used for AOT publish validation).
+- [x] **1.11** Update `d20tek-serialization.slnx` to include all new projects and the tasks doc.
 - [ ] **1.12** Add CI workflow (`.github/workflows/build.yml`): restore, build, test (+coverage), pack on tag.
 
 ---

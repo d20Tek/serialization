@@ -1,0 +1,30 @@
+<Project>
+
+  <!-- Shared build settings for all projects in the repository. -->
+  <PropertyGroup>
+	<LangVersion>latest</LangVersion>
+	<Nullable>enable</Nullable>
+	<ImplicitUsings>enable</ImplicitUsings>
+	<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+	<WarningsNotAsErrors>NU1901;NU1902;NU1903;NU1904</WarningsNotAsErrors>
+	<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+	<Deterministic>true</Deterministic>
+	<ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+
+  <!-- Common NuGet package metadata applied to packable projects. -->
+  <PropertyGroup>
+	<Authors>d20Tek</Authors>
+	<Company>d20Tek</Company>
+	<Product>D20Tek.Serialization</Product>
+	<Copyright>Copyright (c) d20Tek.  All rights reserved.</Copyright>
+	<PackageLicenseExpression>MIT</PackageLicenseExpression>
+	<PackageProjectUrl>https://github.com/d20Tek/serialization</PackageProjectUrl>
+	<RepositoryUrl>https://github.com/d20Tek/serialization</RepositoryUrl>
+	<RepositoryType>git</RepositoryType>
+	<PublishRepositoryUrl>true</PublishRepositoryUrl>
+	<IncludeSymbols>true</IncludeSymbols>
+	<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+
+</Project>
