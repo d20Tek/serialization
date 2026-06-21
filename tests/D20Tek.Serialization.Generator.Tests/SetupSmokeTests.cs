@@ -1,5 +1,4 @@
 using D20Tek.Serialization.Generation;
-using FluentAssertions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
@@ -22,7 +21,7 @@ public sealed class SetupSmokeTests
 
         _ = driver.RunGeneratorsAndUpdateCompilation(compilation, out _, out var diagnostics, TestContext.CancellationToken);
 
-        diagnostics.Should().BeEmpty();
+        Assert.IsTrue(diagnostics.IsEmpty);
     }
 
     public TestContext TestContext { get; set; }
