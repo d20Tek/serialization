@@ -23,7 +23,7 @@ Out of scope for v1.0: YAML/TOML/CSV and other formats (architecture must allow 
 - [ ] Strict and lenient decoding behaviors verified by tests.
 - [ ] Zero-copy reader paths allocate no managed strings for strings/numbers/property names (validated).
 - [ ] AOT/trimming: Binary sample app publishes with NativeAOT and round-trips successfully.
-- [ ] CI builds, runs tests, and packs both packages.
+- [x] CI builds, runs tests, and packs both packages.
 
 ---
 
@@ -43,7 +43,7 @@ These tasks establish the project layout that the rest of the plan depends on.
 - [x] **1.9** Create `tests/D20Tek.Serialization.Generator.Tests` (uses `Microsoft.CodeAnalysis.*.Testing` / snapshot verification).
 - [x] **1.10** Create `samples/D20Tek.Serialization.Binary.Sample` console app (used for AOT publish validation).
 - [x] **1.11** Update `d20tek-serialization.slnx` to include all new projects and the tasks doc.
-- [ ] **1.12** Add CI workflow (`.github/workflows/build.yml`): restore, build, test (+coverage), pack on tag.
+- [x] **1.12** Add CI workflow (`.github/workflows/build.yml`): restore, build, test (+coverage), pack on tag.
 
 ---
 
