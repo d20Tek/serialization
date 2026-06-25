@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace D20Tek.Serialization.Core.Tests;
@@ -8,67 +9,113 @@ public sealed class AttributeTests
     [TestMethod]
     public void SerializableAttribute_IsSealed()
     {
-        Assert.IsTrue(typeof(SerializableAttribute).IsSealed);
+        // arrange
+
+        // act
+        var isSealed = typeof(SerializableAttribute).IsSealed;
+
+        // assert
+        Assert.IsTrue(isSealed);
     }
 
     [TestMethod]
     public void SerializableAttribute_TargetsClassesAndStructs()
     {
+        // arrange
+
+        // act
         var usage = GetUsage<SerializableAttribute>();
 
+        // assert
         Assert.AreEqual(AttributeTargets.Class | AttributeTargets.Struct, usage.ValidOn);
     }
 
     [TestMethod]
     public void SerializedNameAttribute_IsSealed()
     {
-        Assert.IsTrue(typeof(SerializedNameAttribute).IsSealed);
+        // arrange
+
+        // act
+        var isSealed = typeof(SerializedNameAttribute).IsSealed;
+
+        // assert
+        Assert.IsTrue(isSealed);
     }
 
     [TestMethod]
     public void SerializedNameAttribute_TargetsPropertiesAndFields()
     {
+        // arrange
+
+        // act
         var usage = GetUsage<SerializedNameAttribute>();
 
+        // assert
         Assert.AreEqual(AttributeTargets.Property | AttributeTargets.Field, usage.ValidOn);
     }
 
     [TestMethod]
     public void SerializedNameAttribute_ExposesNameFromConstructor()
     {
+        // arrange
         var attribute = new SerializedNameAttribute("first_name");
 
-        Assert.AreEqual("first_name", attribute.Name);
+        // act
+        var name = attribute.Name;
+
+        // assert
+        Assert.AreEqual("first_name", name);
     }
 
     [TestMethod]
     public void IgnoreSerializedAttribute_IsSealed()
     {
-        Assert.IsTrue(typeof(IgnoreSerializedAttribute).IsSealed);
+        // arrange
+
+        // act
+        var isSealed = typeof(IgnoreSerializedAttribute).IsSealed;
+
+        // assert
+        Assert.IsTrue(isSealed);
     }
 
     [TestMethod]
     public void IgnoreSerializedAttribute_TargetsPropertiesAndFields()
     {
+        // arrange
+
+        // act
         var usage = GetUsage<IgnoreSerializedAttribute>();
 
+        // assert
         Assert.AreEqual(AttributeTargets.Property | AttributeTargets.Field, usage.ValidOn);
     }
 
     [TestMethod]
     public void RequiredSerializedAttribute_IsSealed()
     {
-        Assert.IsTrue(typeof(RequiredSerializedAttribute).IsSealed);
+        // arrange
+
+        // act
+        var isSealed = typeof(RequiredSerializedAttribute).IsSealed;
+
+        // assert
+        Assert.IsTrue(isSealed);
     }
 
     [TestMethod]
     public void RequiredSerializedAttribute_TargetsPropertiesAndFields()
     {
+        // arrange
+
+        // act
         var usage = GetUsage<RequiredSerializedAttribute>();
 
+        // assert
         Assert.AreEqual(AttributeTargets.Property | AttributeTargets.Field, usage.ValidOn);
     }
 
+    [ExcludeFromCodeCoverage]
     private static AttributeUsageAttribute GetUsage<TAttribute>()
         where TAttribute : Attribute =>
         typeof(TAttribute).GetCustomAttribute<AttributeUsageAttribute>()
