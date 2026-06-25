@@ -52,28 +52,28 @@ These tasks establish the project layout that the rest of the plan depends on.
 Namespaces: `D20Tek.Serialization`, `D20Tek.Serialization.Generation`, `D20Tek.Serialization.Dom`.
 
 ### 2.1 Attributes (spec §2.2)
-- [ ] **2.1.1** `SerializableAttribute` (`Class | Struct`, `sealed`).
-- [ ] **2.1.2** `SerializedNameAttribute(string name)` with `Name` property (`Property | Field`).
-- [ ] **2.1.3** `IgnoreSerializedAttribute` (`Property | Field`).
-- [ ] **2.1.4** `RequiredSerializedAttribute` (`Property | Field`).
-- [ ] **2.1.5** Unit tests for attribute usage targets and property values.
+- [x] **2.1.1** `SerializableAttribute` (`Class | Struct`, `sealed`).
+- [x] **2.1.2** `SerializedNameAttribute(string name)` with `Name` property (`Property | Field`).
+- [x] **2.1.3** `IgnoreSerializedAttribute` (`Property | Field`).
+- [x] **2.1.4** `RequiredSerializedAttribute` (`Property | Field`).
+- [x] **2.1.5** Unit tests for attribute usage targets and property values.
 
 ### 2.2 Naming Policy (spec §2.3)
-- [ ] **2.2.1** `abstract class NamingPolicy` with `abstract string ConvertName(string)`.
-- [ ] **2.2.2** Static `Default => null` and `CamelCase` accessors.
-- [ ] **2.2.3** `CamelCaseNamingPolicy` implementation (handles empty/edge-case names, already-camel input).
-- [ ] **2.2.4** Unit tests covering camelCase conversion + edge cases.
+- [x] **2.2.1** `abstract class NamingPolicy` with `abstract string ConvertName(string)`.
+- [x] **2.2.2** Static `Default => null` and `CamelCase` accessors.
+- [x] **2.2.3** `CamelCaseNamingPolicy` implementation (handles empty/edge-case names, already-camel input).
+- [x] **2.2.4** Unit tests covering camelCase conversion + edge cases.
 
 ### 2.3 Serializer Options (spec §2.5)
-- [ ] **2.3.1** `abstract class SerializerOptions` with `PropertyNamingPolicy`, `IgnoreNullValues`, `IList<Converter> Converters`.
-- [ ] **2.3.2** Unit tests for default values and converter list behavior.
+- [x] **2.3.1** `abstract class SerializerOptions` with `PropertyNamingPolicy`, `IgnoreNullValues`, `IList<Converter> Converters`.
+- [x] **2.3.2** Unit tests for default values and converter list behavior.
 
 ### 2.4 Format-Agnostic Reader/Writer (spec §2.6)
-- [ ] **2.4.1** `enum ValueKind { Null, Boolean, Number, String, Object, Array }`.
-- [ ] **2.4.2** `interface IFormatWriter` (object/array/property + Null/Boolean/Number(long)/Number(double)/String).
-- [ ] **2.4.3** `interface IFormatReader` (ValueKind, read structural tokens, `TryReadPropertyName`, typed getters).
-- [ ] **2.4.4** Zero-copy members on reader: `ReadOnlySpan<byte> GetRawStringBytes()`, `GetRawNumberBytes()`.
-- [ ] **2.4.5** XML docs describing contract expectations (cursor movement, ordering).
+- [x] **2.4.1** `enum ValueKind { Null, Boolean, Number, String, Object, Array }`.
+- [x] **2.4.2** `interface IFormatWriter` (object/array/property + Null/Boolean/Number(long)/Number(double)/String).
+- [x] **2.4.3** `interface IFormatReader` (ValueKind, read structural tokens, `TryReadPropertyName`, typed getters).
+- [x] **2.4.4** Zero-copy members on reader: `ReadOnlySpan<byte> GetRawStringBytes()`, `GetRawNumberBytes()`.
+- [x] **2.4.5** XML docs describing contract expectations (cursor movement, ordering).
 
 ### 2.5 Converters (spec §2.4)
 - [ ] **2.5.1** `abstract class Converter` with `abstract bool CanConvert(Type)`.
