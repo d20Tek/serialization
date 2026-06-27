@@ -9,6 +9,7 @@
     <Description>Shared abstractions, metadata, converters, DOM, and source-generator contracts for the D20Tek.Serialization platform. This is the format-agnostic core used by all D20Tek serializers.</Description>
     <PackageTags>serialization; serializer; core; converters; source generator; AOT; DOM</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RootNamespace>D20Tek.Serialization</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,9 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\D20Tek.Serialization.Generator\D20Tek.Serialization.Generator.csproj"
-                      OutputItemType="Analyzer"
-                      ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\D20Tek.Serialization.Generator\D20Tek.Serialization.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
 </Project>

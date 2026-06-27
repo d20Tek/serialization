@@ -76,14 +76,14 @@ Namespaces: `D20Tek.Serialization`, `D20Tek.Serialization.Generation`, `D20Tek.S
 - [x] **2.4.5** XML docs describing contract expectations (cursor movement, ordering).
 
 ### 2.5 Converters (spec §2.4)
-- [ ] **2.5.1** `abstract class Converter` with `abstract bool CanConvert(Type)`.
-- [ ] **2.5.2** `abstract class Converter<T> : Converter` with default `CanConvert`, abstract `Read`/`Write` against `IFormatReader/IFormatWriter`.
-- [ ] **2.5.3** Unit tests for `CanConvert` default behavior.
+- [x] **2.5.1** `abstract class Converter` with `abstract bool CanConvert(Type)`.
+- [x] **2.5.2** `abstract class Converter<T> : Converter` with default `CanConvert`, abstract `Read`/`Write` against `IFormatReader/IFormatWriter`.
+- [x] **2.5.3** Unit tests for `CanConvert` default behavior.
 
 ### 2.6 Error Reporting (spec §2.7)
-- [ ] **2.6.1** `sealed class SerializationException : Exception` with `Path`, `Expected`, `Actual` and the specified constructor.
-- [ ] **2.6.2** Define JSONPath path-building helper (segments for `.property` and `[index]`) reusable by readers.
-- [ ] **2.6.3** Unit tests for path formatting (`$.user.address.street`, `$.items[3].price`) and expected/actual capture.
+- [x] **2.6.1** `sealed class SerializationException : Exception` with `Path`, `Expected`, `Actual` and the specified constructor.
+- [x] **2.6.2** Define JSONPath path-building helper (segments for `.property` and `[index]`) reusable by readers.
+- [x] **2.6.3** Unit tests for path formatting (`$.user.address.street`, `$.items[3].price`) and expected/actual capture.
 
 ### 2.7 Type Metadata — Reflection Fallback (spec §2.8)
 - [ ] **2.7.1** `internal sealed class MemberMetadata` (Name, SerializedName, MemberType, IsRequired, IgnoreNull, compiled `Getter`/`Setter`).
