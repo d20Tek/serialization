@@ -86,11 +86,11 @@ Namespaces: `D20Tek.Serialization`, `D20Tek.Serialization.Generation`, `D20Tek.S
 - [x] **2.6.3** Unit tests for path formatting (`$.user.address.street`, `$.items[3].price`) and expected/actual capture.
 
 ### 2.7 Type Metadata — Reflection Fallback (spec §2.8)
-- [ ] **2.7.1** `internal sealed class MemberMetadata` (Name, SerializedName, MemberType, IsRequired, IgnoreNull, compiled `Getter`/`Setter`).
-- [ ] **2.7.2** `internal sealed class TypeMetadata` (Type + `IReadOnlyList<MemberMetadata>`).
-- [ ] **2.7.3** Metadata builder: reflect properties (+fields when enabled), apply `[SerializedName]`, `[IgnoreSerialized]`, `[RequiredSerialized]`, naming policy.
-- [ ] **2.7.4** Compile getters/setters via expression trees / delegates for performance; cache per `(Type, options)`.
-- [ ] **2.7.5** Unit tests for metadata extraction + caching.
+- [x] **2.7.1** `internal sealed class MemberMetadata` (Name, SerializedName, MemberType, IsRequired, IgnoreNull, compiled `Getter`/`Setter`).
+- [x] **2.7.2** `internal sealed class TypeMetadata` (Type + `IReadOnlyList<MemberMetadata>`).
+- [x] **2.7.3** Metadata builder: reflect properties (+fields when enabled), apply `[SerializedName]`, `[IgnoreSerialized]`, `[RequiredSerialized]`, naming policy.
+- [x] **2.7.4** Compile getters/setters via expression trees / delegates for performance; cache per `(Type, options)`.
+- [x] **2.7.5** Unit tests for metadata extraction + caching.
 
 ### 2.8 Source Generator Contracts (spec §2.9)
 - [ ] **2.8.1** `interface IGeneratedSerializer<T>` (`Write`, `Read`).
