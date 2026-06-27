@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace D20Tek.Serialization;
+namespace D20Tek.Serialization.Errors;
 
 /// <summary>
 /// Maintains the stack of object property names and array indices visited while reading,
@@ -10,6 +10,7 @@ namespace D20Tek.Serialization;
 /// </summary>
 internal sealed class SerializationPathBuilder
 {
+    private const string _pathPrefix = "$";
     private readonly List<PathSegment> _segments = [];
 
     /// <summary>
@@ -51,10 +52,7 @@ internal sealed class SerializationPathBuilder
     /// </summary>
     public void Pop()
     {
-        if (_segments.Count > 0)
-        {
-            _segments.RemoveAt(_segments.Count - 1);
-        }
+        if (_segments.Count > 0) _segments.RemoveAt(_segments.Count - 1);
     }
 
     /// <summary>
@@ -63,7 +61,7 @@ internal sealed class SerializationPathBuilder
     /// <returns>The path string for the current stack state.</returns>
     public string ToPath()
     {
-        var builder = new StringBuilder("$");
+        var builder = new StringBuilder(_pathPrefix);
         foreach (var segment in _segments)
         {
             segment.AppendTo(builder);
@@ -79,7 +77,7 @@ internal sealed class SerializationPathBuilder
     /// <returns>The rendered path string.</returns>
     public static string BuildPath(IEnumerable<PathSegment> segments)
     {
-        var builder = new StringBuilder("$");
+        var builder = new StringBuilder(_pathPrefix);
         foreach (var segment in segments)
         {
             segment.AppendTo(builder);

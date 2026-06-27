@@ -2,7 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace D20Tek.Serialization;
+namespace D20Tek.Serialization.Metadata;
 
 /// <summary>
 /// Builds <see cref="TypeMetadata"/> for a type by reflecting over its members, applying the
@@ -12,6 +12,8 @@ namespace D20Tek.Serialization;
 /// </summary>
 internal static class TypeMetadataBuilder
 {
+    private const string _instanceParameterName = "instance";
+    private const string _valueParameterName = "value";
     private const string ReflectionMessage =
         "The reflection-based serialization fallback dynamically reflects over and accesses " +
         "type members and is not compatible with trimming or ahead-of-time compilation.";
@@ -45,10 +47,7 @@ internal static class TypeMetadataBuilder
 
         foreach (var property in type.GetProperties(MemberFlags))
         {
-            if (property.GetIndexParameters().Length > 0 || !property.CanRead || !property.CanWrite || IsIgnored(property))
-            {
-                continue;
-            }
+            if (IsNotSerializableProperty(property)) continue;
 
             members.Add(CreateMember(property, property.PropertyType, namingPolicy, ignoreNull));
         }
@@ -57,17 +56,19 @@ internal static class TypeMetadataBuilder
         {
             foreach (var field in type.GetFields(MemberFlags))
             {
-                if (field.IsInitOnly || IsIgnored(field))
-                {
-                    continue;
-                }
+                if (IsNotSerializableField(field)) continue;
 
                 members.Add(CreateMember(field, field.FieldType, namingPolicy, ignoreNull));
             }
         }
 
-        return new TypeMetadata(type, members);
+        return new(type, members);
     }
+
+    private static bool IsNotSerializableField(FieldInfo field) => field.IsInitOnly || IsIgnored(field);
+
+    private static bool IsNotSerializableProperty(PropertyInfo property) => 
+        property.GetIndexParameters().Length > 0 || !property.CanRead || !property.CanWrite || IsIgnored(property);
 
     private static bool IsIgnored(MemberInfo member) => member.IsDefined(typeof(IgnoreSerializedAttribute), inherit: true);
 
@@ -95,18 +96,13 @@ internal static class TypeMetadataBuilder
     private static string ResolveSerializedName(MemberInfo member, NamingPolicy? namingPolicy)
     {
         var custom = member.GetCustomAttribute<SerializedNameAttribute>(inherit: true);
-        if (custom is not null)
-        {
-            return custom.Name;
-        }
-
-        return namingPolicy?.ConvertName(member.Name) ?? member.Name;
+        return custom?.Name ?? namingPolicy?.ConvertName(member.Name) ?? member.Name;
     }
 
     [RequiresDynamicCode(ReflectionMessage)]
     private static Func<object, object?> CompileGetter(MemberInfo member)
     {
-        var instance = Expression.Parameter(typeof(object), "instance");
+        var instance = Expression.Parameter(typeof(object), _instanceParameterName);
         var typedInstance = Expression.Convert(instance, member.DeclaringType!);
         var access = Expression.MakeMemberAccess(typedInstance, member);
         var boxed = Expression.Convert(access, typeof(object));
@@ -117,8 +113,8 @@ internal static class TypeMetadataBuilder
     [RequiresDynamicCode(ReflectionMessage)]
     private static Action<object, object?> CompileSetter(MemberInfo member, Type memberType)
     {
-        var instance = Expression.Parameter(typeof(object), "instance");
-        var value = Expression.Parameter(typeof(object), "value");
+        var instance = Expression.Parameter(typeof(object), _instanceParameterName);
+        var value = Expression.Parameter(typeof(object), _valueParameterName);
         var typedInstance = Expression.Convert(instance, member.DeclaringType!);
         var typedValue = Expression.Convert(value, memberType);
         var access = Expression.MakeMemberAccess(typedInstance, member);

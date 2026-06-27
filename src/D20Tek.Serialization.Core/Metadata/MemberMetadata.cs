@@ -1,4 +1,4 @@
-namespace D20Tek.Serialization;
+namespace D20Tek.Serialization.Metadata;
 
 /// <summary>
 /// Describes a single serializable member (property or field) discovered through reflection,

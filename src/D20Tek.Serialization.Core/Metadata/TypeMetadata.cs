@@ -1,4 +1,4 @@
-namespace D20Tek.Serialization;
+namespace D20Tek.Serialization.Metadata;
 
 /// <summary>
 /// Describes a type and its ordered collection of serializable members, produced by the

@@ -1,3 +1,5 @@
+using D20Tek.Serialization.Metadata;
+
 namespace D20Tek.Serialization.Core.Tests;
 
 [TestClass]

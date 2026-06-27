@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace D20Tek.Serialization;
+namespace D20Tek.Serialization.Errors;
 
 /// <summary>
 /// Represents a single segment of an object tree path: either an object property name (rendered as
@@ -8,14 +8,14 @@ namespace D20Tek.Serialization;
 /// </summary>
 internal readonly struct PathSegment
 {
+    private const char _arrayPrefix = '[';
+    private const char _arraySuffix = ']';
+    private const char _propertyPrefix = '.';
+
     private readonly string? _propertyName;
     private readonly int _index;
 
-    private PathSegment(string? propertyName, int index)
-    {
-        _propertyName = propertyName;
-        _index = index;
-    }
+    private PathSegment(string? propertyName, int index) => (_propertyName, _index) = (propertyName, index);
 
     /// <summary>
     /// Gets a value indicating whether this segment represents an array index.
@@ -40,15 +40,8 @@ internal readonly struct PathSegment
     /// Appends the rendered form of this segment to the specified <see cref="StringBuilder"/>.
     /// </summary>
     /// <param name="builder">The builder to append to.</param>
-    public void AppendTo(StringBuilder builder)
-    {
-        if (_propertyName is null)
-        {
-            builder.Append('[').Append(_index).Append(']');
-        }
-        else
-        {
-            builder.Append('.').Append(_propertyName);
-        }
-    }
+    public StringBuilder AppendTo(StringBuilder builder) =>
+         (_propertyName is null)
+            ? builder.Append(_arrayPrefix).Append(_index).Append(_arraySuffix)
+            : builder.Append(_propertyPrefix).Append(_propertyName);
 }

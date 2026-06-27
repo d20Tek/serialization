@@ -1,3 +1,4 @@
+using D20Tek.Serialization.Metadata;
 using System.Diagnostics.CodeAnalysis;
 
 namespace D20Tek.Serialization.Core.Tests;

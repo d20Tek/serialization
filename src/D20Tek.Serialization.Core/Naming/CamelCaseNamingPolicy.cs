@@ -9,15 +9,12 @@ namespace D20Tek.Serialization;
 /// <c>Person</c> becomes <c>person</c>, <c>FirstName</c> becomes <c>firstName</c>, and
 /// <c>XMLData</c> becomes <c>xmlData</c>.
 /// </remarks>
-internal sealed class CamelCaseNamingPolicy : NamingPolicy
+public sealed class CamelCaseNamingPolicy : NamingPolicy
 {
     /// <inheritdoc />
     public override string ConvertName(string name)
     {
-        if (string.IsNullOrEmpty(name) || !char.IsUpper(name[0]))
-        {
-            return name;
-        }
+        if (string.IsNullOrEmpty(name) || !char.IsUpper(name[0])) return name;
 
         return string.Create(name.Length, name, static (chars, source) =>
         {

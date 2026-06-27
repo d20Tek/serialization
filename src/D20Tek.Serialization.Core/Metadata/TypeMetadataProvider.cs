@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
-namespace D20Tek.Serialization;
+namespace D20Tek.Serialization.Metadata;
 
 /// <summary>
 /// Resolves and caches <see cref="TypeMetadata"/> per <c>(Type, options)</c> pair so the
