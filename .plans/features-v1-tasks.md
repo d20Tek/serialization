@@ -98,11 +98,11 @@ Namespaces: `D20Tek.Serialization`, `D20Tek.Serialization.Generation`, `D20Tek.S
 - [x] **2.8.3** Unit tests with a hand-written fake registry/serializer to lock the contract.
 
 ### 2.9 Shared DOM — Node (spec §2.10)
-- [ ] **2.9.1** `enum NodeKind { Null, Boolean, Number, String, Object, Array }`.
-- [ ] **2.9.2** `readonly struct Node` (Kind, Get* accessors, object/array enumerators, `this[string]`, `this[int]`).
-- [ ] **2.9.3** `readonly struct NodeProperty` (Name, Value).
-- [ ] **2.9.4** Define construction/factory surface for building `Node` trees (used by Binary DOM parser).
-- [ ] **2.9.5** Unit tests for indexing, kind checks, and invalid-access exceptions.
+- [x] **2.9.1** `enum NodeKind { Null, Boolean, Number, String, Object, Array }`.
+- [x] **2.9.2** `readonly struct Node` (Kind, Get* accessors, object/array enumerators, `this[string]`, `this[int]`).
+- [x] **2.9.3** `readonly struct NodeProperty` (Name, Value).
+- [x] **2.9.4** Define construction/factory surface for building `Node` trees (used by Binary DOM parser).
+- [x] **2.9.5** Unit tests for indexing, kind checks, and invalid-access exceptions.
 
 ### 2.10 Source Generator — Basic (spec §2.9, Phase 1.9)
 - [ ] **2.10.1** Implement `IIncrementalGenerator` that discovers `[Serializable]` types.
