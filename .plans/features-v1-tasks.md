@@ -93,9 +93,9 @@ Namespaces: `D20Tek.Serialization`, `D20Tek.Serialization.Generation`, `D20Tek.S
 - [x] **2.7.5** Unit tests for metadata extraction + caching.
 
 ### 2.8 Source Generator Contracts (spec §2.9)
-- [ ] **2.8.1** `interface IGeneratedSerializer<T>` (`Write`, `Read`).
-- [ ] **2.8.2** `interface IGeneratedSerializerRegistry` (`bool TryGetSerializer<T>(out ...)`).
-- [ ] **2.8.3** Unit tests with a hand-written fake registry/serializer to lock the contract.
+- [x] **2.8.1** `interface IGeneratedSerializer<T>` (`Write`, `Read`).
+- [x] **2.8.2** `interface IGeneratedSerializerRegistry` (`bool TryGetSerializer<T>(out ...)`).
+- [x] **2.8.3** Unit tests with a hand-written fake registry/serializer to lock the contract.
 
 ### 2.9 Shared DOM — Node (spec §2.10)
 - [ ] **2.9.1** `enum NodeKind { Null, Boolean, Number, String, Object, Array }`.
