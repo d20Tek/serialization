@@ -21,6 +21,18 @@ public sealed class LocationInfoTests
     }
 
     [TestMethod]
+    public void CreateFrom_NullLocation_ReturnsNull()
+    {
+        // arrange
+
+        // act
+        var info = LocationInfo.CreateFrom(null);
+
+        // assert
+        Assert.IsNull(info);
+    }
+
+    [TestMethod]
     public void CreateFrom_LocationWithSourceTree_CapturesFilePath()
     {
         // arrange

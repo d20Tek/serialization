@@ -130,6 +130,20 @@ public sealed class EquatableArrayTests
     }
 
     [TestMethod]
+    public void Equals_InitializedVersusDefault_ReturnsFalse()
+    {
+        // arrange
+        var first = Create("a");
+        EquatableArray<string> second = default;
+
+        // act
+        var areEqual = first.Equals(second);
+
+        // assert
+        Assert.IsFalse(areEqual);
+    }
+
+    [TestMethod]
     public void Equals_Object_SameElements_ReturnsTrue()
     {
         // arrange
@@ -178,6 +192,23 @@ public sealed class EquatableArrayTests
 
         // assert
         Assert.AreEqual(0, hash);
+    }
+
+    [TestMethod]
+    public void GetHashCode_WithNullElement_TreatsNullAsZero()
+    {
+        // arrange
+        var array = Create("a", null!, "b");
+
+        // act
+        var hash = array.GetHashCode();
+
+        // assert
+        var expected = 17;
+        expected = (expected * 31) + "a".GetHashCode();
+        expected = (expected * 31) + 0;
+        expected = (expected * 31) + "b".GetHashCode();
+        Assert.AreEqual(expected, hash);
     }
 
     [TestMethod]

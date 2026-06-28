@@ -23,7 +23,7 @@ internal static class ModelBuilder
         {
             diagnostics.Add(new DiagnosticInfo(
                 DiagnosticDescriptors.UnsupportedSerializableType,
-                LocationInfo.CreateFrom(type.Locations.FirstOrDefault() ?? Location.None),
+                LocationInfo.CreateFrom(type.Locations.FirstOrDefault()),
                 new[] { type.Name }.ToImmutableArray().ToEquatableArray()));
         }
 
@@ -146,7 +146,7 @@ internal static class ModelBuilder
     {
         foreach (var attribute in property.GetAttributes())
         {
-            if (attribute.AttributeClass?.ToDisplayString() == SerializedNameAttribute &&
+            if (attribute.AttributeClass!.ToDisplayString() == SerializedNameAttribute &&
                 attribute.ConstructorArguments.Length == 1 &&
                 attribute.ConstructorArguments[0].Value is string name)
             {
@@ -165,7 +165,7 @@ internal static class ModelBuilder
     {
         foreach (var attribute in symbol.GetAttributes())
         {
-            if (attribute.AttributeClass?.ToDisplayString() == attributeMetadataName)
+            if (attribute.AttributeClass!.ToDisplayString() == attributeMetadataName)
             {
                 return true;
             }
@@ -177,6 +177,6 @@ internal static class ModelBuilder
     private static DiagnosticInfo CreateDiagnostic(DiagnosticDescriptor descriptor, ISymbol symbol, params string[] args) =>
         new(
             descriptor,
-            LocationInfo.CreateFrom(symbol.Locations.FirstOrDefault() ?? Location.None),
+            LocationInfo.CreateFrom(symbol.Locations.FirstOrDefault()),
             args.ToImmutableArray().ToEquatableArray());
 }

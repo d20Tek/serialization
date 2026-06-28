@@ -16,8 +16,9 @@ internal sealed record LocationInfo(string FilePath, TextSpanInfo Span, LinePosi
                 new Microsoft.CodeAnalysis.Text.LinePosition(LineSpan.StartLine, LineSpan.StartCharacter),
                 new Microsoft.CodeAnalysis.Text.LinePosition(LineSpan.EndLine, LineSpan.EndCharacter)));
 
-    public static LocationInfo? CreateFrom(Location location)
+    public static LocationInfo? CreateFrom(Location? location)
     {
+        location ??= Location.None;
         if (location.SourceTree is null)
         {
             return null;

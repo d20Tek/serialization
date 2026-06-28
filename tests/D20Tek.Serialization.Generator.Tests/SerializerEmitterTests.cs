@@ -346,4 +346,21 @@ public sealed class SerializerEmitterTests
         Assert.Contains("public global::Demo.Sample Read(", source);
         Assert.DoesNotContain("global::Demo.Sample? Read(", source);
     }
+
+    [TestMethod]
+    public void Emit_UnknownStrategy_EmitsDefaultReadValue()
+    {
+        // arrange
+        var model = ModelFactory.Type(
+            members: ModelFactory.Member(
+                "Unknown",
+                (MemberStrategy)999,
+                fullyQualifiedTypeName: "global::Demo.Custom"));
+
+        // act
+        var source = SerializerEmitter.Emit(model);
+
+        // assert
+        Assert.Contains("result.Unknown = default;", source);
+    }
 }
