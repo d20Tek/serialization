@@ -1,3 +1,4 @@
+using D20Tek.Serialization.Generation;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
@@ -113,6 +114,55 @@ public sealed class AttributeTests
 
         // assert
         Assert.AreEqual(AttributeTargets.Property | AttributeTargets.Field, usage.ValidOn);
+    }
+
+    [TestMethod]
+    public void GeneratedSerializerRegistryAttribute_IsSealed()
+    {
+        // arrange
+
+        // act
+        var isSealed = typeof(GeneratedSerializerRegistryAttribute).IsSealed;
+
+        // assert
+        Assert.IsTrue(isSealed);
+    }
+
+    [TestMethod]
+    public void GeneratedSerializerRegistryAttribute_TargetsAssembly()
+    {
+        // arrange
+
+        // act
+        var usage = GetUsage<GeneratedSerializerRegistryAttribute>();
+
+        // assert
+        Assert.AreEqual(AttributeTargets.Assembly, usage.ValidOn);
+    }
+
+    [TestMethod]
+    public void GeneratedSerializerRegistryAttribute_DoesNotAllowMultiple()
+    {
+        // arrange
+
+        // act
+        var usage = GetUsage<GeneratedSerializerRegistryAttribute>();
+
+        // assert
+        Assert.IsFalse(usage.AllowMultiple);
+    }
+
+    [TestMethod]
+    public void GeneratedSerializerRegistryAttribute_ExposesRegistryTypeFromConstructor()
+    {
+        // arrange
+        var attribute = new GeneratedSerializerRegistryAttribute(typeof(AttributeTests));
+
+        // act
+        var registryType = attribute.RegistryType;
+
+        // assert
+        Assert.AreEqual(typeof(AttributeTests), registryType);
     }
 
     [ExcludeFromCodeCoverage]

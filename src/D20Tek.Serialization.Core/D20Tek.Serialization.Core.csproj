@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="D20Tek.Serialization.Core.Tests" />
+    <InternalsVisibleTo Include="D20Tek.Serialization.Generator.Tests" />
     <InternalsVisibleTo Include="D20Tek.Serialization.Binary" />
     <InternalsVisibleTo Include="D20Tek.Serialization.Binary.Tests" />
   </ItemGroup>

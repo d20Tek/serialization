@@ -18,6 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\D20Tek.Serialization.Core\D20Tek.Serialization.Core.csproj" />
     <ProjectReference Include="..\..\src\D20Tek.Serialization.Generator\D20Tek.Serialization.Generator.csproj" />
   </ItemGroup>
 

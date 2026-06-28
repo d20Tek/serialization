@@ -105,13 +105,13 @@ Namespaces: `D20Tek.Serialization`, `D20Tek.Serialization.Generation`, `D20Tek.S
 - [x] **2.9.5** Unit tests for indexing, kind checks, and invalid-access exceptions.
 
 ### 2.10 Source Generator — Basic (spec §2.9, Phase 1.9)
-- [ ] **2.10.1** Implement `IIncrementalGenerator` that discovers `[Serializable]` types.
-- [ ] **2.10.2** Build a serialization model (members, serialized names, required/ignore/null rules) mirroring `TypeMetadata`.
-- [ ] **2.10.3** Emit one `IGeneratedSerializer<T>` per `[Serializable]` type (Write/Read against `IFormatWriter/IFormatReader`).
-- [ ] **2.10.4** Emit a per-assembly `IGeneratedSerializerRegistry` implementation.
-- [ ] **2.10.5** Emit module/assembly hook so the registry is discoverable at runtime (e.g., `[assembly:]` attribute or registration entry point).
-- [ ] **2.10.6** Emit diagnostics for unsupported member types / inaccessible setters.
-- [ ] **2.10.7** Generator tests: snapshot generated code + compile-and-run validation.
+- [x] **2.10.1** Implement `IIncrementalGenerator` that discovers `[Serializable]` types.
+- [x] **2.10.2** Build a serialization model (members, serialized names, required/ignore/null rules) mirroring `TypeMetadata`.
+- [x] **2.10.3** Emit one `IGeneratedSerializer<T>` per `[Serializable]` type (Write/Read against `IFormatWriter/IFormatReader`).
+- [x] **2.10.4** Emit a per-assembly `IGeneratedSerializerRegistry` implementation.
+- [x] **2.10.5** Emit module/assembly hook so the registry is discoverable at runtime (e.g., `[assembly:]` attribute or registration entry point).
+- [x] **2.10.6** Emit diagnostics for unsupported member types / inaccessible setters.
+- [x] **2.10.7** Generator tests: snapshot generated code + compile-and-run validation.
 
 ### Phase 1 Exit Criteria
 - [ ] Core compiles, all Core unit tests pass.
