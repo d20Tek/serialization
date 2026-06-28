@@ -10,7 +10,7 @@ namespace D20Tek.Serialization.Generation;
 /// </summary>
 internal static class ModelBuilder
 {
-    private const string SerializedNameAttribute = "D20Tek.Serialization.SerializedNameAttribute";
+    private const string SerializedNameAttribute = "D20Tek.Serialization.NameSerializedAttribute";
     private const string IgnoreSerializedAttribute = "D20Tek.Serialization.IgnoreSerializedAttribute";
     private const string RequiredSerializedAttribute = "D20Tek.Serialization.RequiredSerializedAttribute";
 

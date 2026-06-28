@@ -95,7 +95,7 @@ internal static class TypeMetadataBuilder
 
     private static string ResolveSerializedName(MemberInfo member, NamingPolicy? namingPolicy)
     {
-        var custom = member.GetCustomAttribute<SerializedNameAttribute>(inherit: true);
+        var custom = member.GetCustomAttribute<NameSerializedAttribute>(inherit: true);
         return custom?.Name ?? namingPolicy?.ConvertName(member.Name) ?? member.Name;
     }
 

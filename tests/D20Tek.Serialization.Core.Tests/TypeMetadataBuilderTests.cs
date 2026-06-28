@@ -255,7 +255,7 @@ public sealed class TypeMetadataBuilderTests
 
         public string? Name { get; set; }
 
-        [SerializedName("custom_name")]
+        [NameSerialized("custom_name")]
         public string? Aliased { get; set; }
 
         [IgnoreSerialized]

@@ -24,7 +24,6 @@ internal sealed class MemberMetadata(
     Func<object, object?> getter,
     Action<object, object?> setter)
 {
-
     /// <summary>
     /// Gets the .NET member name.
     /// </summary>
@@ -32,7 +31,7 @@ internal sealed class MemberMetadata(
 
     /// <summary>
     /// Gets the name used when serializing the member, after applying any
-    /// <see cref="SerializedNameAttribute"/> or configured <see cref="NamingPolicy"/>.
+    /// <see cref="NameSerializedAttribute"/> or configured <see cref="NamingPolicy"/>.
     /// </summary>
     public string SerializedName { get; } = serializedName;
 

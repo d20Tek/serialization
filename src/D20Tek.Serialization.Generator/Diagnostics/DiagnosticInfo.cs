@@ -12,6 +12,5 @@ internal sealed record DiagnosticInfo(
     LocationInfo? Location,
     EquatableArray<string> MessageArguments)
 {
-    public Diagnostic ToDiagnostic() =>
-        Diagnostic.Create(Descriptor, Location?.ToLocation(), [.. MessageArguments]);
+    public Diagnostic ToDiagnostic() => Diagnostic.Create(Descriptor, Location?.ToLocation(), [.. MessageArguments]);
 }

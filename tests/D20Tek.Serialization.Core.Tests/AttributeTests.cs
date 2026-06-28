@@ -37,7 +37,7 @@ public sealed class AttributeTests
         // arrange
 
         // act
-        var isSealed = typeof(SerializedNameAttribute).IsSealed;
+        var isSealed = typeof(NameSerializedAttribute).IsSealed;
 
         // assert
         Assert.IsTrue(isSealed);
@@ -49,7 +49,7 @@ public sealed class AttributeTests
         // arrange
 
         // act
-        var usage = GetUsage<SerializedNameAttribute>();
+        var usage = GetUsage<NameSerializedAttribute>();
 
         // assert
         Assert.AreEqual(AttributeTargets.Property | AttributeTargets.Field, usage.ValidOn);
@@ -59,7 +59,7 @@ public sealed class AttributeTests
     public void SerializedNameAttribute_ExposesNameFromConstructor()
     {
         // arrange
-        var attribute = new SerializedNameAttribute("first_name");
+        var attribute = new NameSerializedAttribute("first_name");
 
         // act
         var name = attribute.Name;

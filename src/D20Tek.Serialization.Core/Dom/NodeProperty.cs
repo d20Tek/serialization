@@ -12,7 +12,6 @@ namespace D20Tek.Serialization.Dom;
 /// <exception cref="ArgumentNullException"><paramref name="name"/> is <see langword="null"/>.</exception>
 public readonly struct NodeProperty(string name, Node value)
 {
-
     /// <summary>
     /// Gets the property name.
     /// </summary>

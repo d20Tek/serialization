@@ -11,7 +11,6 @@ namespace D20Tek.Serialization.Metadata;
 /// <param name="members">The ordered serializable members of the type.</param>
 internal sealed class TypeMetadata(Type type, IReadOnlyList<MemberMetadata> members)
 {
-
     /// <summary>
     /// Gets the type the metadata describes.
     /// </summary>

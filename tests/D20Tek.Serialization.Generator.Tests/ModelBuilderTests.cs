@@ -230,7 +230,7 @@ public sealed class ModelBuilderTests
             [D20Tek.Serialization.Serializable]
             public sealed class Aliased
             {
-                [D20Tek.Serialization.SerializedName("custom_name")]
+                [D20Tek.Serialization.NameSerialized("custom_name")]
                 public int Id { get; set; }
             }
             """;

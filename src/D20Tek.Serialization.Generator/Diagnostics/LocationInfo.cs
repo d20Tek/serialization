@@ -1,4 +1,5 @@
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Text;
 
 namespace D20Tek.Serialization.Generation;
 
@@ -11,10 +12,10 @@ internal sealed record LocationInfo(string FilePath, TextSpanInfo Span, LinePosi
     public Location ToLocation() =>
         Location.Create(
             FilePath,
-            new Microsoft.CodeAnalysis.Text.TextSpan(Span.Start, Span.Length),
-            new Microsoft.CodeAnalysis.Text.LinePositionSpan(
-                new Microsoft.CodeAnalysis.Text.LinePosition(LineSpan.StartLine, LineSpan.StartCharacter),
-                new Microsoft.CodeAnalysis.Text.LinePosition(LineSpan.EndLine, LineSpan.EndCharacter)));
+            new TextSpan(Span.Start, Span.Length),
+            new LinePositionSpan(
+                new LinePosition(LineSpan.StartLine, LineSpan.StartCharacter),
+                new LinePosition(LineSpan.EndLine, LineSpan.EndCharacter)));
 
     public static LocationInfo? CreateFrom(Location? location)
     {

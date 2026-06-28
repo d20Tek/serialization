@@ -14,7 +14,6 @@ internal readonly struct EquatableArray<T>(ImmutableArray<T> array) : IEquatable
     where T : IEquatable<T>
 {
     public static readonly EquatableArray<T> Empty = new(ImmutableArray<T>.Empty);
-
     private readonly ImmutableArray<T> _array = array;
 
     public int Count => _array.IsDefault ? 0 : _array.Length;
