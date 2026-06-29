@@ -114,8 +114,8 @@ Namespaces: `D20Tek.Serialization`, `D20Tek.Serialization.Generation`, `D20Tek.S
 - [x] **2.10.7** Generator tests: snapshot generated code + compile-and-run validation.
 
 ### Phase 1 Exit Criteria
-- [ ] Core compiles, all Core unit tests pass.
-- [ ] Generator produces compiling serializers + registry for sample `[Serializable]` types.
+- [x] Core compiles, all Core unit tests pass.
+- [x] Generator produces compiling serializers + registry for sample `[Serializable]` types.
 
 ---
 
@@ -123,14 +123,49 @@ Namespaces: `D20Tek.Serialization`, `D20Tek.Serialization.Generation`, `D20Tek.S
 
 References `System.Formats.Cbor`. Implements the CBOR encoding rules in spec §3.1.
 
+### Project Structure & Naming Convention
+
+Organize the library so format-agnostic types live at the root and wire-format-specific
+types live in a per-format folder/sub-namespace. This isolates CBOR and lets a future
+format (e.g., TLV) drop in as a parallel folder without refactoring shared code.
+
+- **`Binary*` = shared / abstraction** (facade, options, profile, reflection driver, DOM).
+- **`Cbor*` = CBOR wire implementation** (format reader/writer + tag-specific converters).
+
+```
+D20Tek.Serialization.Binary/
+  BinarySerializer.cs              ← public facade (defaults to CBOR in v1)
+  BinarySerializerOptions.cs       ← shared options
+  BinaryProfile.cs                 ← shared extensibility point
+  BinaryDecodingMode.cs            ← shared
+  Reflection/
+    ReflectionBinarySerializer.cs  ← format-agnostic (drives IFormatWriter/IFormatReader)
+  Cbor/
+    CborFormatWriter.cs
+    CborFormatReader.cs
+    Converters/                    ← CBOR tag-specific built-in converters
+      GuidCborConverter.cs
+      DateTimeCborConverter.cs
+      ...
+  Dom/
+    BinaryDocument.cs
+    BinaryElement.cs
+```
+
+> Do **not** build a format-selection abstraction in v1 (YAGNI); `BinarySerializer`
+> targets CBOR directly. The layout above exists only to make a future format an
+> additive change rather than a refactor.
+
 ### 3.1 Binary Options (spec §3.2)
-- [ ] **3.1.1** `enum BinaryDecodingMode { Strict, Lenient }`.
-- [ ] **3.1.2** `abstract class BinaryProfile` (`Name`, virtual `Configure(BinarySerializerOptions)`).
-- [ ] **3.1.3** `sealed class BinarySerializerOptions : SerializerOptions` (`IncludeFields`, `DecodingMode = Lenient`, `Profile`).
-- [ ] **3.1.4** Apply `Profile.Configure` during options resolution.
-- [ ] **3.1.5** Unit tests for defaults and profile application.
+> Folder: package root (shared across all formats).
+- [x] **3.1.1** `enum BinaryDecodingMode { Strict, Lenient }`.
+- [x] **3.1.2** `abstract class BinaryProfile` (`Name`, virtual `Configure(BinarySerializerOptions)`).
+- [x] **3.1.3** `sealed class BinarySerializerOptions : SerializerOptions` (`IncludeFields`, `DecodingMode = Lenient`, `Profile`).
+- [x] **3.1.4** Apply `Profile.Configure` during options resolution.
+- [x] **3.1.5** Unit tests for defaults and profile application.
 
 ### 3.2 CborFormatWriter (spec §3.1, Phase 2.2)
+> Folder: `Cbor/`.
 - [ ] **3.2.1** Implement `IFormatWriter` over `CborWriter` (definite lengths only — indefinite disallowed).
 - [ ] **3.2.2** Object → CBOR map (string keys only); array → CBOR array.
 - [ ] **3.2.3** Null → simple value 22; Boolean → CBOR bool; Integer → CBOR int; Float → **always 64-bit** IEEE-754.
@@ -139,6 +174,7 @@ References `System.Formats.Cbor`. Implements the CBOR encoding rules in spec §3
 - [ ] **3.2.6** Unit tests asserting exact CBOR byte output per encoding rule.
 
 ### 3.3 CborFormatReader — zero-copy + error paths (spec §3.4, §3.5)
+> Folder: `Cbor/`.
 - [ ] **3.3.1** Implement `IFormatReader` over `CborReader` with `ValueKind` mapping.
 - [ ] **3.3.2** Structural reads (`ReadStartObject/EndObject/StartArray/EndArray`), `TryReadPropertyName`.
 - [ ] **3.3.3** Typed getters (`IsNull`, `GetBoolean`, `GetInt64`, `GetDouble`, `GetString`).
@@ -151,21 +187,29 @@ References `System.Formats.Cbor`. Implements the CBOR encoding rules in spec §3
 - [ ] **3.3.10** Unit tests: zero-copy correctness, path accuracy, strict vs lenient, malformed input.
 
 ### 3.4 Reflection Binary Serializer (spec §3.6)
+> Folder: `Reflection/` (format-agnostic; drives `IFormatWriter`/`IFormatReader`).
 - [ ] **3.4.1** `ReflectionBinarySerializer` using `TypeMetadata` to write/read objects.
 - [ ] **3.4.2** Apply naming policy, null handling (`IgnoreNullValues`), required-member enforcement, `IncludeFields`.
 - [ ] **3.4.3** Required-member-missing → `SerializationException` with path.
 - [ ] **3.4.4** Unit tests for each option's behavior + nested object/array round-trips.
 
 ### 3.5 Built-in Converters (spec §3.7)
-- [ ] **3.5.1** `GuidBinaryConverter` — CBOR **Tag 37 + 16-byte bstr**.
-- [ ] **3.5.2** `DateTimeBinaryConverter` — **Tag 1 + epoch ms (UTC)**.
-- [ ] **3.5.3** `DateTimeOffsetBinaryConverter` — same encoding as DateTime.
-- [ ] **3.5.4** `DecimalBinaryConverter` — encode as **string**.
-- [ ] **3.5.5** `EnumBinaryConverter<TEnum>` — encode as integer.
+> Folder: `Cbor/Converters/`. These converters encode **CBOR-specific tags**, so they are
+> named `*CborConverter` (not `*BinaryConverter`) to keep the "Binary = shared,
+> Cbor = wire-specific" convention. A future TLV format would supply its own
+> `Tlv/Converters/` equivalents with different encodings.
+- [ ] **3.5.1** `GuidCborConverter` — CBOR **Tag 37 + 16-byte bstr**.
+- [ ] **3.5.2** `DateTimeCborConverter` — **Tag 1 + epoch ms (UTC)**.
+- [ ] **3.5.3** `DateTimeOffsetCborConverter` — same encoding as DateTime.
+- [ ] **3.5.4** `DecimalCborConverter` — encode as **string**.
+- [ ] **3.5.5** `EnumCborConverter<TEnum>` — encode as integer.
 - [ ] **3.5.6** Register all built-ins by default in options resolution.
 - [ ] **3.5.7** Unit tests for each converter (round-trip + exact bytes/tags).
 
 ### 3.6 BinarySerializer Facade (spec §3.3)
+> Folder: package root. Keep the public entry point named `BinarySerializer` (matches the
+> package brand); CBOR is an internal default for v1, selected via options rather than the
+> type name.
 - [ ] **3.6.1** `static T? Deserialize<T>(ReadOnlySpan<byte>, BinarySerializerOptions?)`.
 - [ ] **3.6.2** `static object? Deserialize(ReadOnlySpan<byte>, Type, BinarySerializerOptions?)`.
 - [ ] **3.6.3** `static byte[] SerializeToByteArray<T>(T, BinarySerializerOptions?)`.
@@ -183,11 +227,13 @@ References `System.Formats.Cbor`. Implements the CBOR encoding rules in spec §3
 ## **4. Phase 3 — DOM + Polish**
 
 ### 4.1 CBOR → Node Parser (spec §2.10, Phase 3.1)
+> Folder: `Cbor/` (CBOR-specific; produces the shared `Node` tree).
 - [ ] **4.1.1** Parser that reads CBOR into the shared `Node` tree (maps → object nodes, arrays → array nodes, scalars per encoding rules).
 - [ ] **4.1.2** Decode tagged values (Guid/DateTime) into appropriate node representations.
 - [ ] **4.1.3** Unit tests for parser correctness across all value kinds.
 
 ### 4.2 BinaryDocument / BinaryElement (spec §3.8)
+> Folder: `Dom/` (shared; the public DOM surface over a parsed `Node` tree).
 - [ ] **4.2.1** `enum BinaryValueKind` and `readonly struct BinaryProperty`.
 - [ ] **4.2.2** `sealed class BinaryDocument : IDisposable` (materialized `byte[]` + parsed `Node` tree, `RootElement`, `static Parse(ReadOnlySpan<byte>)`).
 - [ ] **4.2.3** `readonly struct BinaryElement` (`ValueKind`, `GetString/GetInt32/GetInt64/GetDouble/GetBoolean`, `this[string]`, `this[int]`, `EnumerateObject`, `EnumerateArray`).
