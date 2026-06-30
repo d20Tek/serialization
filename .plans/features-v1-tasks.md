@@ -175,16 +175,16 @@ D20Tek.Serialization.Binary/
 
 ### 3.3 CborFormatReader — zero-copy + error paths (spec §3.4, §3.5)
 > Folder: `Cbor/`.
-- [ ] **3.3.1** Implement `IFormatReader` over `CborReader` with `ValueKind` mapping.
-- [ ] **3.3.2** Structural reads (`ReadStartObject/EndObject/StartArray/EndArray`), `TryReadPropertyName`.
-- [ ] **3.3.3** Typed getters (`IsNull`, `GetBoolean`, `GetInt64`, `GetDouble`, `GetString`).
-- [ ] **3.3.4** Zero-copy `GetRawStringBytes()` / `GetRawNumberBytes()` returning UTF-8 / numeric slices without allocation (careful slice tracking over the source buffer).
-- [ ] **3.3.5** Maintain `Stack<object>` path stack (property name / array index); build JSONPath on error.
-- [ ] **3.3.6** Throw `SerializationException` with message, path, expected, actual on type mismatch.
-- [ ] **3.3.7** Strict mode: error on unknown tags and unknown properties.
-- [ ] **3.3.8** Lenient mode: skip unknown tags/properties.
-- [ ] **3.3.9** Reject indefinite-length items (v1 invariant).
-- [ ] **3.3.10** Unit tests: zero-copy correctness, path accuracy, strict vs lenient, malformed input.
+- [x] **3.3.1** Implement `IFormatReader` over `CborReader` with `ValueKind` mapping.
+- [x] **3.3.2** Structural reads (`ReadStartObject/EndObject/StartArray/EndArray`), `TryReadPropertyName`.
+- [x] **3.3.3** Typed getters (`IsNull`, `GetBoolean`, `GetInt64`, `GetDouble`, `GetString`).
+- [x] **3.3.4** Zero-copy `GetRawStringBytes()` / `GetRawNumberBytes()` returning UTF-8 / numeric slices without allocation (careful slice tracking over the source buffer).
+- [x] **3.3.5** Maintain `Stack<object>` path stack (property name / array index); build JSONPath on error.
+- [x] **3.3.6** Throw `SerializationException` with message, path, expected, actual on type mismatch.
+- [x] **3.3.7** Strict mode: error on unknown tags and unknown properties.
+- [x] **3.3.8** Lenient mode: skip unknown tags/properties.
+- [x] **3.3.9** Reject indefinite-length items (v1 invariant).
+- [x] **3.3.10** Unit tests: zero-copy correctness, path accuracy, strict vs lenient, malformed input.
 
 ### 3.4 Reflection Binary Serializer (spec §3.6)
 > Folder: `Reflection/` (format-agnostic; drives `IFormatWriter`/`IFormatReader`).
