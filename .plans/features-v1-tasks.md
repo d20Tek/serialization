@@ -166,12 +166,12 @@ D20Tek.Serialization.Binary/
 
 ### 3.2 CborFormatWriter (spec §3.1, Phase 2.2)
 > Folder: `Cbor/`.
-- [ ] **3.2.1** Implement `IFormatWriter` over `CborWriter` (definite lengths only — indefinite disallowed).
-- [ ] **3.2.2** Object → CBOR map (string keys only); array → CBOR array.
-- [ ] **3.2.3** Null → simple value 22; Boolean → CBOR bool; Integer → CBOR int; Float → **always 64-bit** IEEE-754.
-- [ ] **3.2.4** String → text string; expose write path for raw byte strings (byte[] → bstr).
-- [ ] **3.2.5** Encode buffer to `IBufferWriter<byte>` / `byte[]`.
-- [ ] **3.2.6** Unit tests asserting exact CBOR byte output per encoding rule.
+- [x] **3.2.1** Implement `IFormatWriter` over `CborWriter` (definite lengths only — indefinite disallowed).
+- [x] **3.2.2** Object → CBOR map (string keys only); array → CBOR array.
+- [x] **3.2.3** Null → simple value 22; Boolean → CBOR bool; Integer → CBOR int; Float → **always 64-bit** IEEE-754.
+- [x] **3.2.4** String → text string; expose write path for raw byte strings (byte[] → bstr).
+- [x] **3.2.5** Encode buffer to `IBufferWriter<byte>` / `byte[]`.
+- [x] **3.2.6** Unit tests asserting exact CBOR byte output per encoding rule.
 
 ### 3.3 CborFormatReader — zero-copy + error paths (spec §3.4, §3.5)
 > Folder: `Cbor/`.
