@@ -283,7 +283,7 @@ public sealed class SerializerEmitterTests
 
         // assert
         Assert.Contains("while (reader.TryReadPropertyName(out var __name))", source);
-        Assert.Contains("reader.GetString();", source);
+        Assert.Contains("reader.SkipValue();", source);
     }
 
     [TestMethod]

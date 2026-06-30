@@ -1,5 +1,4 @@
 using D20Tek.Serialization.Errors;
-using System.Buffers.Binary;
 using System.Formats.Cbor;
 
 namespace D20Tek.Serialization.Binary.Cbor;
@@ -20,31 +19,26 @@ namespace D20Tek.Serialization.Binary.Cbor;
 /// when values are skipped: <see cref="BinaryDecodingMode.Strict"/> rejects them while
 /// <see cref="BinaryDecodingMode.Lenient"/> skips them.
 /// </remarks>
-internal sealed class CborFormatReader : IFormatReader
+/// <remarks>
+/// Initializes a new instance of the <see cref="CborFormatReader"/> class over the supplied
+/// CBOR document.
+/// </remarks>
+/// <param name="data">
+/// The CBOR-encoded source buffer. The buffer must remain alive and unmodified for as long
+/// as any span returned by <see cref="GetRawStringBytes"/> or <see cref="GetRawNumberBytes"/>
+/// is in use, because those spans reference this buffer directly.
+/// </param>
+/// <param name="decodingMode">
+/// The decoding mode that controls how unknown tags are handled. The default is
+/// <see cref="BinaryDecodingMode.Lenient"/>.
+/// </param>
+internal sealed partial class CborFormatReader(ReadOnlyMemory<byte> data, BinaryDecodingMode decodingMode = BinaryDecodingMode.Lenient)
+    : IFormatReader
 {
-    private readonly CborReader _reader;
-    private readonly BinaryDecodingMode _decodingMode;
+    private readonly CborReader _reader = new(data, CborConformanceMode.Lax, allowMultipleRootLevelValues: false);
+    private readonly BinaryDecodingMode _decodingMode = decodingMode;
     private readonly SerializationPathBuilder _path = new();
     private readonly Stack<Scope> _scopes = new();
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="CborFormatReader"/> class over the supplied
-    /// CBOR document.
-    /// </summary>
-    /// <param name="data">
-    /// The CBOR-encoded source buffer. The buffer must remain alive and unmodified for as long
-    /// as any span returned by <see cref="GetRawStringBytes"/> or <see cref="GetRawNumberBytes"/>
-    /// is in use, because those spans reference this buffer directly.
-    /// </param>
-    /// <param name="decodingMode">
-    /// The decoding mode that controls how unknown tags are handled. The default is
-    /// <see cref="BinaryDecodingMode.Lenient"/>.
-    /// </param>
-    public CborFormatReader(ReadOnlyMemory<byte> data, BinaryDecodingMode decodingMode = BinaryDecodingMode.Lenient)
-    {
-        _decodingMode = decodingMode;
-        _reader = new CborReader(data, CborConformanceMode.Lax, allowMultipleRootLevelValues: false);
-    }
 
     /// <summary>
     /// Gets the decoding mode that governs how unknown tags are handled.
@@ -52,7 +46,7 @@ internal sealed class CborFormatReader : IFormatReader
     public BinaryDecodingMode DecodingMode => _decodingMode;
 
     /// <inheritdoc />
-    public ValueKind ValueKind => MapState(_reader.PeekState());
+    public ValueKind ValueKind => CborReadErrors.MapState(_reader.PeekState());
 
     /// <inheritdoc />
     public void ReadStartObject()
@@ -62,6 +56,7 @@ internal sealed class CborFormatReader : IFormatReader
         // CborReaderState reports StartMap for both definite- and indefinite-length maps;
         // ReadStartMap returns null for the indefinite-length form, which v1 rejects.
         if (_reader.ReadStartMap() is null) throw IndefiniteNotSupported("map");
+
         _scopes.Push(new Scope(isArray: false));
     }
 
@@ -82,6 +77,7 @@ internal sealed class CborFormatReader : IFormatReader
         // CborReaderState reports StartArray for both definite- and indefinite-length arrays;
         // ReadStartArray returns null for the indefinite-length form, which v1 rejects.
         if (_reader.ReadStartArray() is null) throw IndefiniteNotSupported("array");
+
         _scopes.Push(new Scope(isArray: true));
         _path.PushIndex(0);
     }
@@ -147,26 +143,14 @@ internal sealed class CborFormatReader : IFormatReader
     /// <inheritdoc />
     public double GetDouble()
     {
-        double value;
-        switch (_reader.PeekState())
+        var value = _reader.PeekState() switch
         {
-            case CborReaderState.UnsignedInteger:
-            case CborReaderState.NegativeInteger:
-                value = _reader.ReadInt64();
-                break;
-            case CborReaderState.HalfPrecisionFloat:
-                value = (double)_reader.ReadHalf();
-                break;
-            case CborReaderState.SinglePrecisionFloat:
-                value = _reader.ReadSingle();
-                break;
-            case CborReaderState.DoublePrecisionFloat:
-                value = _reader.ReadDouble();
-                break;
-            default:
-                throw Mismatch(ValueKind.Number);
-        }
-
+            CborReaderState.UnsignedInteger or CborReaderState.NegativeInteger => _reader.ReadInt64(),
+            CborReaderState.HalfPrecisionFloat => (double)_reader.ReadHalf(),
+            CborReaderState.SinglePrecisionFloat => (double)_reader.ReadSingle(),
+            CborReaderState.DoublePrecisionFloat => _reader.ReadDouble(),
+            _ => throw Mismatch(ValueKind.Number),
+        };
         OnValueRead();
         return value;
     }
@@ -203,7 +187,7 @@ internal sealed class CborFormatReader : IFormatReader
         }
 
         var encoded = _reader.ReadEncodedValue().Span;
-        var (offset, length) = GetStringPayloadRange(encoded);
+        var (offset, length) = CborLengthDecoder.GetStringPayloadRange(encoded);
         var payload = encoded.Slice(offset, length);
         OnValueRead();
         return payload;
@@ -253,91 +237,5 @@ internal sealed class CborFormatReader : IFormatReader
 
         _reader.SkipValue();
         OnValueRead();
-    }
-
-    private void EnsureStringKey()
-    {
-        var state = _reader.PeekState();
-        if (state == CborReaderState.StartIndefiniteLengthTextString) throw IndefiniteNotSupported("text string");
-        if (state != CborReaderState.TextString) throw Mismatch(ValueKind.String);
-    }
-
-    private void PushPropertySegment(string name)
-    {
-        var scope = _scopes.Count > 0 ? _scopes.Peek() : null;
-        if (scope is { HasChild: true }) _path.Pop();
-
-        _path.PushProperty(name);
-        if (scope is not null) scope.HasChild = true;
-    }
-
-    private void OnValueRead()
-    {
-        if (_scopes.Count == 0) return;
-
-        var scope = _scopes.Peek();
-        if (scope.IsArray)
-        {
-            scope.Index++;
-            _path.SetIndex(scope.Index);
-        }
-    }
-
-    private SerializationException Mismatch(ValueKind expected)
-    {
-        var actual = MapState(_reader.PeekState());
-        return new SerializationException(
-            $"Expected {expected} but found {actual}.",
-            _path.ToPath(),
-            expected,
-            actual);
-    }
-
-    private SerializationException IndefiniteNotSupported(string itemKind) =>
-        new($"Indefinite-length {itemKind} values are not supported.", _path.ToPath());
-
-    private static ValueKind MapState(CborReaderState state) => state switch
-    {
-        CborReaderState.StartMap => ValueKind.Object,
-        CborReaderState.StartArray => ValueKind.Array,
-        CborReaderState.TextString or CborReaderState.StartIndefiniteLengthTextString => ValueKind.String,
-        CborReaderState.ByteString or CborReaderState.StartIndefiniteLengthByteString => ValueKind.String,
-        CborReaderState.UnsignedInteger or CborReaderState.NegativeInteger => ValueKind.Number,
-        CborReaderState.HalfPrecisionFloat or CborReaderState.SinglePrecisionFloat
-            or CborReaderState.DoublePrecisionFloat => ValueKind.Number,
-        CborReaderState.Boolean => ValueKind.Boolean,
-        _ => ValueKind.Null,
-    };
-
-    /// <summary>
-    /// Decodes the length header of a CBOR text or byte string and returns the payload's byte
-    /// offset and length within <paramref name="encoded"/>. Exposed as <see langword="internal"/>
-    /// so every header form — including the defensive malformed case that the public read path
-    /// rejects earlier — can be unit tested directly.
-    /// </summary>
-    /// <param name="encoded">The full encoded string item, beginning with its initial byte.</param>
-    /// <returns>The payload's offset and length within <paramref name="encoded"/>.</returns>
-    /// <exception cref="SerializationException">Thrown when the length header is malformed.</exception>
-    internal static (int Offset, int Length) GetStringPayloadRange(ReadOnlySpan<byte> encoded)
-    {
-        int additionalInfo = encoded[0] & 0x1F;
-        return additionalInfo switch
-        {
-            <= 23 => (1, additionalInfo),
-            24 => (2, encoded[1]),
-            25 => (3, BinaryPrimitives.ReadUInt16BigEndian(encoded.Slice(1, 2))),
-            26 => (5, checked((int)BinaryPrimitives.ReadUInt32BigEndian(encoded.Slice(1, 4)))),
-            27 => (9, checked((int)BinaryPrimitives.ReadUInt64BigEndian(encoded.Slice(1, 8)))),
-            _ => throw new SerializationException("Malformed CBOR string length header.", "$"),
-        };
-    }
-
-    private sealed class Scope(bool isArray)
-    {
-        public bool IsArray { get; } = isArray;
-
-        public int Index { get; set; }
-
-        public bool HasChild { get; set; }
     }
 }

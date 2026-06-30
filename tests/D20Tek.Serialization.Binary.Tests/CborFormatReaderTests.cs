@@ -641,7 +641,7 @@ public sealed class CborFormatReaderTests
         var encoded = Convert.FromHexString(hex);
 
         // act
-        var (offset, length) = CborFormatReader.GetStringPayloadRange(encoded);
+        var (offset, length) = CborLengthDecoder.GetStringPayloadRange(encoded);
 
         // assert
         Assert.AreEqual(expectedOffset, offset);
@@ -660,7 +660,7 @@ public sealed class CborFormatReaderTests
 
         // act
         var ex = Assert.ThrowsExactly<SerializationException>(
-            [ExcludeFromCodeCoverage]() => { CborFormatReader.GetStringPayloadRange(encoded); });
+            [ExcludeFromCodeCoverage]() => { CborLengthDecoder.GetStringPayloadRange(encoded); });
 
         // assert
         StringAssert.Contains(ex.Message, "Malformed CBOR string length header");

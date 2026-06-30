@@ -111,4 +111,10 @@ public interface IFormatReader
     /// alive and unmodified. Callers must copy the data if they need to retain it.
     /// </remarks>
     ReadOnlySpan<byte> GetRawNumberBytes();
+
+    /// <summary>
+    /// Skips the current value, including any nested object or array, and advances the reader
+    /// past it. Used to discard unknown properties during deserialization.
+    /// </summary>
+    void SkipValue();
 }

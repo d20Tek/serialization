@@ -152,7 +152,7 @@ internal static class SerializerEmitter
 
         if (model.Members.Count == 0)
         {
-            writer.Line("reader.GetString();");
+            writer.Line("reader.SkipValue();");
         }
         else
         {
@@ -174,7 +174,7 @@ internal static class SerializerEmitter
 
             writer.Line("else");
             writer.OpenBrace();
-            writer.Line("reader.GetString();");
+            writer.Line("reader.SkipValue();");
             writer.CloseBrace();
         }
 

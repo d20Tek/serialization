@@ -49,4 +49,6 @@ internal sealed class ScriptedFormatReader(string name, int age) : IFormatReader
     public ReadOnlySpan<byte> GetRawStringBytes() => System.Text.Encoding.UTF8.GetBytes(GetString());
 
     public ReadOnlySpan<byte> GetRawNumberBytes() => BitConverter.GetBytes(GetInt64());
+
+    public void SkipValue() { _current = null; }
 }

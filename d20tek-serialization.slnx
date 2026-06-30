@@ -3,7 +3,7 @@
     <File Path=".plans/features-v1-tasks.md" />
     <File Path=".plans/features-v1.md" />
   </Folder>
-  <Folder Name="/samples/">
+  <Folder Name="/.plans/samples/">
     <Project Path="samples/D20Tek.Serialization.Binary.Sample/D20Tek.Serialization.Binary.Sample.csproj" />
   </Folder>
   <Folder Name="/src/">
