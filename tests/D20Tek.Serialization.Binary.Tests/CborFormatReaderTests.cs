@@ -359,6 +359,22 @@ public sealed class CborFormatReaderTests
         Assert.AreEqual(ValueKind.Number, ex.Actual);
     }
 
+    [TestMethod]
+    public void TryReadPropertyName_IndefiniteLengthTextStringKey_Throws()
+    {
+        // arrange
+        // A1 = map(1), 7F = start indefinite-length text string, 63666F6F = chunk "foo", FF = break, 01 = value 1
+        var reader = ReaderFromHex("A17F63666F6FFF01");
+        reader.ReadStartObject();
+
+        // act
+        var ex = Assert.ThrowsExactly<SerializationException>(
+            [ExcludeFromCodeCoverage]() => reader.TryReadPropertyName(out _));
+
+        // assert
+        StringAssert.Contains(ex.Message, "Indefinite-length text string");
+    }
+
     // --- Error paths & path tracking ---
 
     [TestMethod]
@@ -384,6 +400,20 @@ public sealed class CborFormatReaderTests
 
         // act
         var ex = Assert.ThrowsExactly<SerializationException>([ExcludeFromCodeCoverage]() => reader.GetInt64());
+
+        // assert
+        Assert.AreEqual(ValueKind.Number, ex.Expected);
+        Assert.AreEqual(ValueKind.String, ex.Actual);
+    }
+
+    [TestMethod]
+    public void GetDouble_OnString_ThrowsWithKinds()
+    {
+        // arrange
+        var reader = ReaderFromHex("6449455446"); // "IETF"
+
+        // act
+        var ex = Assert.ThrowsExactly<SerializationException>([ExcludeFromCodeCoverage]() => reader.GetDouble());
 
         // assert
         Assert.AreEqual(ValueKind.Number, ex.Expected);
@@ -509,6 +539,72 @@ public sealed class CborFormatReaderTests
 
         // assert
         Assert.AreEqual("$.b", ex.Path);
+    }
+
+    [TestMethod]
+    public void PushPropertySegment_FirstPropertyInScope_SetsPathWithoutPopping()
+    {
+        // arrange — covers: scope exists, HasChild is false (first property read)
+        var reader = ReaderFor(w =>
+        {
+            w.WriteStartObject();
+            w.WritePropertyName("first");
+            w.WriteString("bad");
+            w.WriteEndObject();
+        });
+        reader.ReadStartObject();
+        reader.TryReadPropertyName(out _); // first
+
+        // act — force an error to inspect the path
+        var ex = Assert.ThrowsExactly<SerializationException>([ExcludeFromCodeCoverage]() => reader.GetInt64());
+
+        // assert — the path should have the single property, not a stale predecessor
+        Assert.AreEqual("$.first", ex.Path);
+    }
+
+    [TestMethod]
+    public void PushPropertySegment_ThirdProperty_PopsSecondBeforePushingThird()
+    {
+        // arrange — covers: scope.HasChild == true on subsequent (third) property
+        var reader = ReaderFor(w =>
+        {
+            w.WriteStartObject();
+            w.WritePropertyName("a");
+            w.WriteNumber(1L);
+            w.WritePropertyName("b");
+            w.WriteNumber(2L);
+            w.WritePropertyName("c");
+            w.WriteString("bad");
+            w.WriteEndObject();
+        });
+        reader.ReadStartObject();
+        reader.TryReadPropertyName(out _); // a
+        reader.GetInt64();
+        reader.TryReadPropertyName(out _); // b
+        reader.GetInt64();
+        reader.TryReadPropertyName(out _); // c
+
+        // act
+        var ex = Assert.ThrowsExactly<SerializationException>([ExcludeFromCodeCoverage]() => reader.GetInt64());
+
+        // assert — path should be $.c, not $.a.b.c (proves pop happened each time)
+        Assert.AreEqual("$.c", ex.Path);
+    }
+
+    [TestMethod]
+    public void PushPropertySegment_NoEnclosingScope_PushesPropertyWithoutScopeTracking()
+    {
+        // arrange — covers: _scopes.Count == 0 (scope is null)
+        // Position the reader on a bare text string without calling ReadStartObject,
+        // so no scope is pushed onto _scopes.
+        var reader = ReaderFromHex("6161"); // text string "a"
+
+        // act — TryReadPropertyName succeeds because PeekState is TextString (not EndMap)
+        var result = reader.TryReadPropertyName(out var name);
+
+        // assert — property was read; path includes the segment even without a scope
+        Assert.IsTrue(result);
+        Assert.AreEqual("a", name);
     }
 
     // --- Indefinite-length rejection (v1 invariant) ---
