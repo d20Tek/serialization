@@ -188,10 +188,10 @@ D20Tek.Serialization.Binary/
 
 ### 3.4 Reflection Binary Serializer (spec §3.6)
 > Folder: `Reflection/` (format-agnostic; drives `IFormatWriter`/`IFormatReader`).
-- [ ] **3.4.1** `ReflectionBinarySerializer` using `TypeMetadata` to write/read objects.
-- [ ] **3.4.2** Apply naming policy, null handling (`IgnoreNullValues`), required-member enforcement, `IncludeFields`.
-- [ ] **3.4.3** Required-member-missing → `SerializationException` with path.
-- [ ] **3.4.4** Unit tests for each option's behavior + nested object/array round-trips.
+- [x] **3.4.1** `ReflectionBinarySerializer` using `TypeMetadata` to write/read objects.
+- [x] **3.4.2** Apply naming policy, null handling (`IgnoreNullValues`), required-member enforcement, `IncludeFields`.
+- [x] **3.4.3** Required-member-missing → `SerializationException` with path.
+- [x] **3.4.4** Unit tests for each option's behavior + nested object/array round-trips.
 
 ### 3.5 Built-in Converters (spec §3.7)
 > Folder: `Cbor/Converters/`. These converters encode **CBOR-specific tags**, so they are
