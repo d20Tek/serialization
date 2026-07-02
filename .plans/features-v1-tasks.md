@@ -219,8 +219,8 @@ D20Tek.Serialization.Binary/
 - [x] **3.6.7** Unit tests proving resolution order and each entry-point round-trips.
 
 ### Phase 2 Exit Criteria
-- [ ] All CBOR encoding rules round-trip via `BinarySerializer`.
-- [ ] Strict/lenient + zero-copy + error-path behaviors verified.
+- [x] All CBOR encoding rules round-trip via `BinarySerializer`.
+- [x] Strict/lenient + zero-copy + error-path behaviors verified.
 
 ---
 
