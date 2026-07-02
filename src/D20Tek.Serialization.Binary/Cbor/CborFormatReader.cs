@@ -238,4 +238,24 @@ internal sealed partial class CborFormatReader(ReadOnlyMemory<byte> data, Binary
         _reader.SkipValue();
         OnValueRead();
     }
+
+    /// <summary>
+    /// Reads and returns the next CBOR semantic tag (major type 6). The tag value is consumed
+    /// and the reader advances so that the next read returns the tag's data item. Used by
+    /// built-in converters to verify expected tags before reading tagged content.
+    /// </summary>
+    /// <returns>The <see cref="CborTag"/> that was read.</returns>
+    public CborTag ReadTag() => _reader.ReadTag();
+
+    /// <summary>
+    /// Reads the current byte string (CBOR major type 2) and advances the reader. Used by
+    /// converters that encode binary payloads (for example <c>GuidCborConverter</c>).
+    /// </summary>
+    /// <returns>The byte array read from the CBOR stream.</returns>
+    public byte[] ReadByteString()
+    {
+        var value = _reader.ReadByteString();
+        OnValueRead();
+        return value;
+    }
 }

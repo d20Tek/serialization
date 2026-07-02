@@ -79,6 +79,14 @@ internal sealed class CborFormatWriter : IFormatWriter
     public void WriteByteString(ReadOnlySpan<byte> value) => _writer.WriteByteString(value);
 
     /// <summary>
+    /// Writes a CBOR semantic tag (major type 6). The tag must be immediately followed by
+    /// the data item it annotates. Used by built-in converters such as
+    /// <c>GuidCborConverter</c> (Tag 37) and <c>DateTimeCborConverter</c> (Tag 1).
+    /// </summary>
+    /// <param name="tag">The CBOR tag to write.</param>
+    public void WriteTag(CborTag tag) => _writer.WriteTag(tag);
+
+    /// <summary>
     /// Encodes the written document into a new byte array using definite-length encodings.
     /// </summary>
     /// <returns>The CBOR-encoded document.</returns>

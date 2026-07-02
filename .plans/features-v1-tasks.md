@@ -198,13 +198,13 @@ D20Tek.Serialization.Binary/
 > named `*CborConverter` (not `*BinaryConverter`) to keep the "Binary = shared,
 > Cbor = wire-specific" convention. A future TLV format would supply its own
 > `Tlv/Converters/` equivalents with different encodings.
-- [ ] **3.5.1** `GuidCborConverter` — CBOR **Tag 37 + 16-byte bstr**.
-- [ ] **3.5.2** `DateTimeCborConverter` — **Tag 1 + epoch ms (UTC)**.
-- [ ] **3.5.3** `DateTimeOffsetCborConverter` — same encoding as DateTime.
-- [ ] **3.5.4** `DecimalCborConverter` — encode as **string**.
-- [ ] **3.5.5** `EnumCborConverter<TEnum>` — encode as integer.
-- [ ] **3.5.6** Register all built-ins by default in options resolution.
-- [ ] **3.5.7** Unit tests for each converter (round-trip + exact bytes/tags).
+- [x] **3.5.1** `GuidCborConverter` — CBOR **Tag 37 + 16-byte bstr**.
+- [x] **3.5.2** `DateTimeCborConverter` — **Tag 1 + epoch ms (UTC)**.
+- [x] **3.5.3** `DateTimeOffsetCborConverter` — same encoding as DateTime.
+- [x] **3.5.4** `DecimalCborConverter` — encode as **string**.
+- [x] **3.5.5** `EnumCborConverter<TEnum>` — encode as integer.
+- [x] **3.5.6** Register all built-ins by default in options resolution.
+- [x] **3.5.7** Unit tests for each converter (round-trip + exact bytes/tags).
 
 ### 3.6 BinarySerializer Facade (spec §3.3)
 > Folder: package root. Keep the public entry point named `BinarySerializer` (matches the
