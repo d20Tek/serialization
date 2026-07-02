@@ -210,13 +210,13 @@ D20Tek.Serialization.Binary/
 > Folder: package root. Keep the public entry point named `BinarySerializer` (matches the
 > package brand); CBOR is an internal default for v1, selected via options rather than the
 > type name.
-- [ ] **3.6.1** `static T? Deserialize<T>(ReadOnlySpan<byte>, BinarySerializerOptions?)`.
-- [ ] **3.6.2** `static object? Deserialize(ReadOnlySpan<byte>, Type, BinarySerializerOptions?)`.
-- [ ] **3.6.3** `static byte[] SerializeToByteArray<T>(T, BinarySerializerOptions?)`.
-- [ ] **3.6.4** `static void Serialize<T>(IBufferWriter<byte>, T, BinarySerializerOptions?)`.
-- [ ] **3.6.5** Implement resolution order: **1) custom converter → 2) generated serializer → 3) reflection fallback** (non-AOT only).
-- [ ] **3.6.6** Default options instance when `options == null`.
-- [ ] **3.6.7** Unit tests proving resolution order and each entry-point round-trips.
+- [x] **3.6.1** `static T? Deserialize<T>(ReadOnlySpan<byte>, BinarySerializerOptions?)`.
+- [x] **3.6.2** `static object? Deserialize(ReadOnlySpan<byte>, Type, BinarySerializerOptions?)`.
+- [x] **3.6.3** `static byte[] SerializeToByteArray<T>(T, BinarySerializerOptions?)`.
+- [x] **3.6.4** `static void Serialize<T>(IBufferWriter<byte>, T, BinarySerializerOptions?)`.
+- [x] **3.6.5** Implement resolution order: **1) custom converter → 2) generated serializer → 3) reflection fallback** (non-AOT only).
+- [x] **3.6.6** Default options instance when `options == null`.
+- [x] **3.6.7** Unit tests proving resolution order and each entry-point round-trips.
 
 ### Phase 2 Exit Criteria
 - [ ] All CBOR encoding rules round-trip via `BinarySerializer`.

@@ -40,7 +40,7 @@ internal static class CompilationFactory
         return symbol;
     }
 
-    private static IReadOnlyList<MetadataReference> BuildReferences()
+    private static List<MetadataReference> BuildReferences()
     {
         var references = new List<MetadataReference>();
 

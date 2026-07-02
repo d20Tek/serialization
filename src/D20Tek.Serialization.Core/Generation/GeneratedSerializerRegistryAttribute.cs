@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace D20Tek.Serialization.Generation;
 
 /// <summary>
@@ -10,11 +12,13 @@ namespace D20Tek.Serialization.Generation;
 /// </remarks>
 /// <param name="registryType">The generated registry type for the assembly.</param>
 [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = false)]
-public sealed class GeneratedSerializerRegistryAttribute(Type registryType) : Attribute
+public sealed class GeneratedSerializerRegistryAttribute(
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)] Type registryType) : Attribute
 {
     /// <summary>
     /// Gets the generated <see cref="IGeneratedSerializerRegistry"/> implementation type for
     /// the assembly.
     /// </summary>
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
     public Type RegistryType { get; } = registryType;
 }
