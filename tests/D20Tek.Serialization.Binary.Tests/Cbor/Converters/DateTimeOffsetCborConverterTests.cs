@@ -75,7 +75,7 @@ public sealed class DateTimeOffsetCborConverterTests
         // act & assert
         var ex = Assert.ThrowsExactly<SerializationException>([ExcludeFromCodeCoverage]() =>
             ReadWith(converter, bytes));
-        Assert.IsTrue(ex.Message.Contains("tag"));
+        Assert.Contains("tag", ex.Message);
     }
 
     [TestMethod]

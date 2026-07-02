@@ -46,7 +46,7 @@ public sealed class EnumCborConverterTests
         var bytes = WriteWith(converter, DayOfWeek.Friday);
 
         // assert — Friday = 5, CBOR unsigned integer 5 is 0x05
-        Assert.AreEqual(1, bytes.Length);
+        Assert.HasCount(1, bytes);
         Assert.AreEqual(0x05, bytes[0]);
     }
 

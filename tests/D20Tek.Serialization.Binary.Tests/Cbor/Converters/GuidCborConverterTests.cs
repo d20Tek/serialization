@@ -39,7 +39,7 @@ public sealed class GuidCborConverterTests
         Assert.AreEqual(0xD8, bytes[0]); // Tag major type 6, 1-byte extended
         Assert.AreEqual(0x25, bytes[1]); // Tag value 37
         Assert.AreEqual(0x50, bytes[2]); // Byte string major type 2, length 16
-        Assert.AreEqual(19, bytes.Length); // 2 (tag) + 1 (bstr header) + 16 (payload)
+        Assert.HasCount(19, bytes); // 2 (tag) + 1 (bstr header) + 16 (payload)
     }
 
     [TestMethod]
@@ -55,7 +55,7 @@ public sealed class GuidCborConverterTests
         // act & assert
         var ex = Assert.ThrowsExactly<SerializationException>([ExcludeFromCodeCoverage]() =>
             ReadWith(converter, bytes));
-        Assert.IsTrue(ex.Message.Contains("37"));
+        Assert.Contains("37", ex.Message);
     }
 
     [TestMethod]

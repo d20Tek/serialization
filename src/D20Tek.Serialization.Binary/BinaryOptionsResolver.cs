@@ -52,19 +52,20 @@ internal static class BinaryOptionsResolver
         }
     }
 
-    private static bool HasUserConverterFor(BinarySerializerOptions options, Converter builtIn)
+    internal static bool HasUserConverterFor(BinarySerializerOptions options, Converter builtIn)
     {
-        foreach (var existing in options.Converters)
-        {
-            // If a user-supplied (or previously registered) converter already handles the same
-            // type as this built-in, skip adding the built-in.
-            if (ReferenceEquals(existing, builtIn)) return true;
-            if (builtIn is GuidCborConverter && existing.CanConvert(typeof(Guid))) return true;
-            if (builtIn is DateTimeCborConverter && existing.CanConvert(typeof(DateTime))) return true;
-            if (builtIn is DateTimeOffsetCborConverter && existing.CanConvert(typeof(DateTimeOffset))) return true;
-            if (builtIn is DecimalCborConverter && existing.CanConvert(typeof(decimal))) return true;
-        }
-
-        return false;
+        var targetType = GetHandledType(builtIn);
+        return options.Converters.Any(existing =>
+            ReferenceEquals(existing, builtIn) ||
+            (targetType is not null && existing.CanConvert(targetType)));
     }
+
+    internal static Type? GetHandledType(Converter converter) => converter switch
+    {
+        GuidCborConverter => typeof(Guid),
+        DateTimeCborConverter => typeof(DateTime),
+        DateTimeOffsetCborConverter => typeof(DateTimeOffset),
+        DecimalCborConverter => typeof(decimal),
+        _ => null,
+    };
 }

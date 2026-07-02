@@ -36,11 +36,7 @@ internal static class CborReadErrors
     internal static SerializationException Mismatch(ValueKind expected, CborReaderState readerState, string path)
     {
         var actual = MapState(readerState);
-        return new SerializationException(
-            $"Expected {expected} but found {actual}.",
-            path,
-            expected,
-            actual);
+        return new SerializationException($"Expected {expected} but found {actual}.", path, expected, actual);
     }
 
     /// <summary>

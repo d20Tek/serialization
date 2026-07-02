@@ -48,7 +48,7 @@ public sealed class DecimalCborConverterTests
         var bytes = WriteWith(converter, 1.5m);
 
         // assert — CBOR text string starts with major type 3 (0x60–0x77 for short strings)
-        Assert.IsTrue((bytes[0] & 0xE0) == 0x60, "Expected CBOR text string major type.");
+        Assert.AreEqual(0x60, bytes[0] & 0xE0, "Expected CBOR text string major type.");
     }
 
     [TestMethod]

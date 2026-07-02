@@ -96,7 +96,7 @@ public sealed class CborFormatWriterTests
         var writer = new CborFormatWriter();
 
         // act
-        writer.WriteByteString(new byte[] { 0x01, 0x02, 0x03 });
+        writer.WriteByteString([0x01, 0x02, 0x03]);
 
         // assert
         AssertHex("43010203", writer);
@@ -109,7 +109,7 @@ public sealed class CborFormatWriterTests
         var writer = new CborFormatWriter();
 
         // act
-        writer.WriteByteString(ReadOnlySpan<byte>.Empty);
+        writer.WriteByteString([]);
 
         // assert
         AssertHex("40", writer);

@@ -138,7 +138,7 @@ public sealed class BinaryOptionsResolverTests
 
         // assert — only the user's converter should be present for Guid
         var guidConverters = options.Converters.Where(c => c.CanConvert(typeof(Guid))).ToList();
-        Assert.AreEqual(1, guidConverters.Count);
+        Assert.HasCount(1, guidConverters);
         Assert.AreSame(userConverter, guidConverters[0]);
     }
 
@@ -155,7 +155,7 @@ public sealed class BinaryOptionsResolverTests
 
         // assert — only the user's converter should be present for DateTime
         var converters = options.Converters.Where(c => c.CanConvert(typeof(DateTime))).ToList();
-        Assert.AreEqual(1, converters.Count);
+        Assert.HasCount(1, converters);
         Assert.AreSame(userConverter, converters[0]);
     }
 
@@ -172,7 +172,7 @@ public sealed class BinaryOptionsResolverTests
 
         // assert — only the user's converter should be present for DateTimeOffset
         var converters = options.Converters.Where(c => c.CanConvert(typeof(DateTimeOffset))).ToList();
-        Assert.AreEqual(1, converters.Count);
+        Assert.HasCount(1, converters);
         Assert.AreSame(userConverter, converters[0]);
     }
 
@@ -189,8 +189,81 @@ public sealed class BinaryOptionsResolverTests
 
         // assert — only the user's converter should be present for decimal
         var converters = options.Converters.Where(c => c.CanConvert(typeof(decimal))).ToList();
-        Assert.AreEqual(1, converters.Count);
+        Assert.HasCount(1, converters);
         Assert.AreSame(userConverter, converters[0]);
+    }
+
+    [TestMethod]
+    public void GetHandledType_UnknownConverter_ReturnsNull()
+    {
+        // arrange
+        var unknownConverter = new UnknownConverter();
+
+        // act
+        var result = BinaryOptionsResolver.GetHandledType(unknownConverter);
+
+        // assert
+        Assert.IsNull(result);
+    }
+
+    [TestMethod]
+    public void Resolve_UnrelatedUserConverter_DoesNotBlockBuiltIns()
+    {
+        // arrange — add a converter for a type that no built-in handles
+        var options = new BinarySerializerOptions();
+        options.Converters.Add(new UnknownConverter());
+
+        // act
+        BinaryOptionsResolver.Resolve(options);
+
+        // assert — all four built-ins should still be registered
+        Assert.IsTrue(HasConverterFor<Guid>(options));
+        Assert.IsTrue(HasConverterFor<DateTime>(options));
+        Assert.IsTrue(HasConverterFor<DateTimeOffset>(options));
+        Assert.IsTrue(HasConverterFor<decimal>(options));
+    }
+
+    [TestMethod]
+    public void Resolve_MixedUserConverters_BlocksOnlyMatchingBuiltIn()
+    {
+        // arrange — supply converters for Guid and decimal but not DateTime/DateTimeOffset
+        var userGuid = new CustomGuidConverter();
+        var userDecimal = new CustomDecimalConverter();
+        var options = new BinarySerializerOptions();
+        options.Converters.Add(userGuid);
+        options.Converters.Add(userDecimal);
+
+        // act
+        BinaryOptionsResolver.Resolve(options);
+
+        // assert — user converters block their matching built-ins
+        var guidConverters = options.Converters.Where(c => c.CanConvert(typeof(Guid))).ToList();
+        Assert.HasCount(1, guidConverters);
+        Assert.AreSame(userGuid, guidConverters[0]);
+
+        var decimalConverters = options.Converters.Where(c => c.CanConvert(typeof(decimal))).ToList();
+        Assert.HasCount(1, decimalConverters);
+        Assert.AreSame(userDecimal, decimalConverters[0]);
+
+        // assert — built-ins for uncovered types are still added
+        Assert.IsTrue(HasConverterFor<DateTime>(options));
+        Assert.IsTrue(HasConverterFor<DateTimeOffset>(options));
+    }
+
+    [TestMethod]
+    public void HasUserConverterFor_UnknownBuiltIn_WithExistingConverters_ReturnsFalse()
+    {
+        // arrange — options has a converter, but the built-in is an unknown type
+        // so targetType is null and the CanConvert check is skipped entirely.
+        var options = new BinarySerializerOptions();
+        options.Converters.Add(new CustomGuidConverter());
+        var unknownBuiltIn = new UnknownConverter();
+
+        // act
+        var result = BinaryOptionsResolver.HasUserConverterFor(options, unknownBuiltIn);
+
+        // assert
+        Assert.IsFalse(result);
     }
 
     private static bool HasConverterFor<T>(BinarySerializerOptions options) =>
@@ -255,6 +328,16 @@ public sealed class BinaryOptionsResolverTests
             throw new NotImplementedException();
 
         public override void Write(IFormatWriter writer, decimal value, SerializerOptions options) =>
+            throw new NotImplementedException();
+    }
+
+    [ExcludeFromCodeCoverage]
+    private sealed class UnknownConverter : Converter<string>
+    {
+        public override string Read(IFormatReader reader, SerializerOptions options) =>
+            throw new NotImplementedException();
+
+        public override void Write(IFormatWriter writer, string value, SerializerOptions options) =>
             throw new NotImplementedException();
     }
 }

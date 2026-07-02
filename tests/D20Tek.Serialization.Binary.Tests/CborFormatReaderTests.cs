@@ -149,7 +149,7 @@ public sealed class CborFormatReaderTests
         var payload = reader.GetRawStringBytes().ToArray();
 
         // assert
-        CollectionAssert.AreEqual(new byte[] { 0x49, 0x45, 0x54, 0x46 }, payload);
+        CollectionAssert.AreEqual("IETF"u8.ToArray(), payload);
     }
 
     [TestMethod]
@@ -163,7 +163,7 @@ public sealed class CborFormatReaderTests
         var payload = reader.GetRawStringBytes().ToArray();
 
         // assert
-        Assert.AreEqual(24, payload.Length);
+        Assert.HasCount(24, payload);
         CollectionAssert.AreEqual(Encoding.UTF8.GetBytes(value), payload);
     }
 
@@ -372,7 +372,7 @@ public sealed class CborFormatReaderTests
             [ExcludeFromCodeCoverage]() => reader.TryReadPropertyName(out _));
 
         // assert
-        StringAssert.Contains(ex.Message, "Indefinite-length text string");
+        Assert.Contains("Indefinite-length text string", ex.Message);
     }
 
     // --- Error paths & path tracking ---
@@ -619,7 +619,7 @@ public sealed class CborFormatReaderTests
         var ex = Assert.ThrowsExactly<SerializationException>([ExcludeFromCodeCoverage]() => reader.ReadStartObject());
 
         // assert
-        StringAssert.Contains(ex.Message, "Indefinite-length map");
+        Assert.Contains("Indefinite-length map", ex.Message);
     }
 
     [TestMethod]
@@ -632,7 +632,7 @@ public sealed class CborFormatReaderTests
         var ex = Assert.ThrowsExactly<SerializationException>([ExcludeFromCodeCoverage]() => reader.ReadStartArray());
 
         // assert
-        StringAssert.Contains(ex.Message, "Indefinite-length array");
+        Assert.Contains("Indefinite-length array", ex.Message);
     }
 
     [TestMethod]
@@ -645,7 +645,7 @@ public sealed class CborFormatReaderTests
         var ex = Assert.ThrowsExactly<SerializationException>([ExcludeFromCodeCoverage]() => reader.GetString());
 
         // assert
-        StringAssert.Contains(ex.Message, "Indefinite-length text string");
+        Assert.Contains("Indefinite-length text string", ex.Message);
     }
 
     [TestMethod]
@@ -658,7 +658,7 @@ public sealed class CborFormatReaderTests
         var ex = Assert.ThrowsExactly<SerializationException>([ExcludeFromCodeCoverage]() => { reader.GetRawStringBytes(); });
 
         // assert
-        StringAssert.Contains(ex.Message, "Indefinite-length string");
+        Assert.Contains("Indefinite-length string", ex.Message);
     }
 
     [TestMethod]
@@ -671,7 +671,7 @@ public sealed class CborFormatReaderTests
         var ex = Assert.ThrowsExactly<SerializationException>([ExcludeFromCodeCoverage]() => { reader.GetRawStringBytes(); });
 
         // assert
-        StringAssert.Contains(ex.Message, "Indefinite-length string");
+        Assert.Contains("Indefinite-length string", ex.Message);
     }
 
     // --- SkipValue: strict vs lenient ---
@@ -701,7 +701,7 @@ public sealed class CborFormatReaderTests
         var ex = Assert.ThrowsExactly<SerializationException>([ExcludeFromCodeCoverage]() => reader.SkipValue());
 
         // assert
-        StringAssert.Contains(ex.Message, "Unknown tag '1'");
+        Assert.Contains("Unknown tag '1'", ex.Message);
     }
 
     [TestMethod]
@@ -759,7 +759,7 @@ public sealed class CborFormatReaderTests
             [ExcludeFromCodeCoverage]() => { CborLengthDecoder.GetStringPayloadRange(encoded); });
 
         // assert
-        StringAssert.Contains(ex.Message, "Malformed CBOR string length header");
+        Assert.Contains("Malformed CBOR string length header", ex.Message);
         Assert.AreEqual("$", ex.Path);
     }
 
