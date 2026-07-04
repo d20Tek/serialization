@@ -228,9 +228,9 @@ D20Tek.Serialization.Binary/
 
 ### 4.1 CBOR → Node Parser (spec §2.10, Phase 3.1)
 > Folder: `Cbor/` (CBOR-specific; produces the shared `Node` tree).
-- [ ] **4.1.1** Parser that reads CBOR into the shared `Node` tree (maps → object nodes, arrays → array nodes, scalars per encoding rules).
-- [ ] **4.1.2** Decode tagged values (Guid/DateTime) into appropriate node representations.
-- [ ] **4.1.3** Unit tests for parser correctness across all value kinds.
+- [x] **4.1.1** Parser that reads CBOR into the shared `Node` tree (maps → object nodes, arrays → array nodes, scalars per encoding rules).
+- [x] **4.1.2** Decode tagged values (Guid/DateTime) into appropriate node representations.
+- [x] **4.1.3** Unit tests for parser correctness across all value kinds.
 
 ### 4.2 BinaryDocument / BinaryElement (spec §3.8)
 > Folder: `Dom/` (shared; the public DOM surface over a parsed `Node` tree).
