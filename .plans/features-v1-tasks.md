@@ -233,12 +233,12 @@ D20Tek.Serialization.Binary/
 - [x] **4.1.3** Unit tests for parser correctness across all value kinds.
 
 ### 4.2 BinaryDocument / BinaryElement (spec §3.8)
-> Folder: `Dom/` (shared; the public DOM surface over a parsed `Node` tree).
-- [ ] **4.2.1** `enum BinaryValueKind` and `readonly struct BinaryProperty`.
-- [ ] **4.2.2** `sealed class BinaryDocument : IDisposable` (materialized `byte[]` + parsed `Node` tree, `RootElement`, `static Parse(ReadOnlySpan<byte>)`).
-- [ ] **4.2.3** `readonly struct BinaryElement` (`ValueKind`, `GetString/GetInt32/GetInt64/GetDouble/GetBoolean`, `this[string]`, `this[int]`, `EnumerateObject`, `EnumerateArray`).
-- [ ] **4.2.4** Dispose semantics (return pooled buffers if used).
-- [ ] **4.2.5** Unit tests: navigation, enumeration, indexing, disposal.
+> Folder: package root folder (shared; the public DOM surface over a parsed `Node` tree).
+- [x] **4.2.1** `enum BinaryValueKind` and `readonly struct BinaryProperty`.
+- [x] **4.2.2** `sealed class BinaryDocument : IDisposable` (materialized `byte[]` + parsed `Node` tree, `RootElement`, `static Parse(ReadOnlySpan<byte>)`).
+- [x] **4.2.3** `readonly struct BinaryElement` (`ValueKind`, `GetString/GetInt32/GetInt64/GetDouble/GetBoolean`, `this[string]`, `this[int]`, `EnumerateObject`, `EnumerateArray`).
+- [x] **4.2.4** Dispose semantics (return pooled buffers if used).
+- [x] **4.2.5** Unit tests: navigation, enumeration, indexing, disposal.
 
 ### 4.3 AOT Configuration (spec Phase 3.3)
 - [ ] **4.3.1** Annotate reflection paths with trimming/AOT attributes (`RequiresUnreferencedCode` / `RequiresDynamicCode` on reflection fallback).
