@@ -1,11 +1,11 @@
-// D20Tek.Serialization.Binary sample application.
+// D20Tek.Serialization.Binary AOT sample application.
 //
 // This sample is the AOT publish validation target for the platform (task 4.3.3).
 // It exercises the source-generated serialization path, the BinaryDocument DOM, and
 // built-in converter round-trips — all AOT-safe with no reflection fallback.
 
 using D20Tek.Serialization;
-using D20Tek.Serialization.Binary.Sample.Models;
+using D20Tek.Serialization.Binary.SampleAOT.Models;
 using D20Tek.Serialization.Dom;
 
 // ─── 1. Source-generated round-trip (AOT-safe) ───────────────────────────────

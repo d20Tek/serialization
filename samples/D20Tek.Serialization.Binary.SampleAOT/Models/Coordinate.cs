@@ -1,6 +1,6 @@
 using D20Tek.Serialization;
 
-namespace D20Tek.Serialization.Binary.Sample.Models;
+namespace D20Tek.Serialization.Binary.SampleAOT.Models;
 
 /// <summary>
 /// Sample value type (struct) validating that the generator produces correct

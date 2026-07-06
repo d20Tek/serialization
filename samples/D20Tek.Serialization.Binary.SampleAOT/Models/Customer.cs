@@ -1,6 +1,6 @@
 using D20Tek.Serialization;
 
-namespace D20Tek.Serialization.Binary.Sample.Models;
+namespace D20Tek.Serialization.Binary.SampleAOT.Models;
 
 /// <summary>
 /// Sample class exercising the source generator with multiple member strategies,
@@ -23,6 +23,6 @@ public sealed class Customer
 
     public long LoyaltyPoints { get; set; }
 
-    [D20Tek.Serialization.IgnoreSerialized]
+    [IgnoreSerialized]
     public string? InternalNotes { get; set; }
 }

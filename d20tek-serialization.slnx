@@ -4,7 +4,7 @@
     <File Path=".plans/features-v1.md" />
   </Folder>
   <Folder Name="/.plans/samples/">
-    <Project Path="samples/D20Tek.Serialization.Binary.Sample/D20Tek.Serialization.Binary.Sample.csproj" />
+    <Project Path="samples/D20Tek.Serialization.Binary.SampleAOT/D20Tek.Serialization.Binary.SampleAOT.csproj" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/D20Tek.Serialization.Binary/D20Tek.Serialization.Binary.csproj" />
