@@ -125,6 +125,71 @@ Just annotate your types with `[Serializable]` and enable the generator:
 
 ---
 
+## **NativeAOT & Trimming Guidance**
+
+D20Tek.Serialization supports two serialization paths with different AOT compatibility:
+
+### AOT‑Safe Path (Source Generation)
+
+The source generator emits reflection‑free serializers and a registry for every `[Serializable]` type.
+This path is fully compatible with NativeAOT publishing and IL trimming.
+
+1. **Annotate your types** with `[Serializable]`:
+   ```csharp
+   [Serializable]
+   public sealed class Customer
+   {
+       public int Id { get; set; }
+       public string Name { get; set; } = string.Empty;
+   }
+   ```
+
+2. **Reference the generator** in your project:
+   ```xml
+   <ProjectReference Include="...\D20Tek.Serialization.Generator.csproj"
+                     OutputItemType="Analyzer"
+                     ReferenceOutputAssembly="false" />
+   ```
+
+3. **Enable AOT** in your project:
+   ```xml
+   <PropertyGroup>
+     <PublishAot>true</PublishAot>
+   </PropertyGroup>
+   ```
+
+4. **Serialize and deserialize** — the generated serializer is discovered automatically:
+   ```csharp
+   byte[] data = BinarySerializer.SerializeToByteArray(customer);
+   Customer? clone = BinarySerializer.Deserialize<Customer>(data);
+   ```
+
+The `BinaryDocument` / `BinaryElement` DOM is also fully AOT‑safe — it parses raw CBOR bytes
+without reflection.
+
+### Reflection Fallback (Non‑AOT)
+
+When no generated serializer or custom converter is registered for a type, `BinarySerializer`
+falls back to a reflection‑based serializer. This path:
+
+- Uses `TypeMetadataBuilder` to discover members at runtime
+- Compiles accessor delegates via expression trees
+- Is **not compatible** with NativeAOT or IL trimming
+
+All reflection entry points are annotated with `[RequiresUnreferencedCode]` and
+`[RequiresDynamicCode]`, so the compiler will emit warnings if you call them in a trimmed context.
+
+### Summary
+
+| Path | AOT‑Safe | Trimming‑Safe | How to Enable |
+|------|----------|---------------|---------------|
+| Source‑generated serializer | ✅ | ✅ | `[Serializable]` + generator reference |
+| Custom converter | ✅ | ✅ | Register via `options.Converters` |
+| BinaryDocument DOM | ✅ | ✅ | `BinaryDocument.Parse(bytes)` |
+| Reflection fallback | ❌ | ❌ | Automatic when no generator/converter found |
+
+---
+
 ## **Documentation**
 
 Documentation lives in the `/docs` folder and includes:

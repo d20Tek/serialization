@@ -62,6 +62,12 @@ internal static class SerializerResolutionHelper
         return false;
     }
 
+    [UnconditionalSuppressMessage("Trimming", "IL2026",
+        Justification = "The generated-serializer path does not use reflection; " +
+        "GeneratedSerializerRegistryAttribute.RegistryType preserves the parameterless constructor.")]
+    [UnconditionalSuppressMessage("AOT", "IL3050",
+        Justification = "Activator.CreateInstance targets a concrete registry type whose " +
+        "parameterless constructor is preserved by DynamicallyAccessedMembers on the attribute.")]
     internal static bool TryGetGeneratedSerializer<T>([MaybeNullWhen(false)] out IGeneratedSerializer<T> serializer)
     {
         var attr = typeof(T).Assembly.GetCustomAttribute<GeneratedSerializerRegistryAttribute>();
@@ -99,6 +105,7 @@ internal static class SerializerResolutionHelper
 
     [RequiresUnreferencedCode(ReflectionFallbackMessage)]
     [RequiresDynamicCode(ReflectionFallbackMessage)]
+    [UnconditionalSuppressMessage("Trimming", "IL2060", Justification = "MakeGenericMethod is guarded by RequiresUnreferencedCode on this method.")]
     internal static object? DeserializeViaReflection(
         CborFormatReader reader, Type returnType,BinarySerializerOptions options)
     {

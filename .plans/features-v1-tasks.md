@@ -241,10 +241,10 @@ D20Tek.Serialization.Binary/
 - [x] **4.2.5** Unit tests: navigation, enumeration, indexing, disposal.
 
 ### 4.3 AOT Configuration (spec Phase 3.3)
-- [ ] **4.3.1** Annotate reflection paths with trimming/AOT attributes (`RequiresUnreferencedCode` / `RequiresDynamicCode` on reflection fallback).
-- [ ] **4.3.2** Ensure generated-serializer path is fully AOT-safe (no reflection).
-- [ ] **4.3.3** Configure sample app for NativeAOT publish; verify trim warnings are clean for the source-gen path.
-- [ ] **4.3.4** Document AOT usage guidance (use `[Serializable]` + generated registry; reflection fallback is non-AOT).
+- [x] **4.3.1** Annotate reflection paths with trimming/AOT attributes (`RequiresUnreferencedCode` / `RequiresDynamicCode` on reflection fallback).
+- [x] **4.3.2** Ensure generated-serializer path is fully AOT-safe (no reflection).
+- [x] **4.3.3** Configure sample app for NativeAOT publish; verify trim warnings are clean for the source-gen path.
+- [x] **4.3.4** Document AOT usage guidance (use `[Serializable]` + generated registry; reflection fallback is non-AOT).
 
 ### 4.4 Tests, Samples & Docs (spec Phase 3.4)
 - [ ] **4.4.1** End-to-end round-trip test suite across nested objects, arrays, all built-in types.
