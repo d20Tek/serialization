@@ -5,6 +5,9 @@
   </Folder>
   <Folder Name="/.plans/samples/">
     <Project Path="samples/D20Tek.Serialization.Binary.SampleAOT/D20Tek.Serialization.Binary.SampleAOT.csproj" />
+    <Project Path="samples/D20Tek.Serialization.Binary.SampleReflected/D20Tek.Serialization.Binary.SampleReflected.csproj">
+      <Build Solution="Debug|*" Project="false" />
+    </Project>
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/D20Tek.Serialization.Binary/D20Tek.Serialization.Binary.csproj" />
