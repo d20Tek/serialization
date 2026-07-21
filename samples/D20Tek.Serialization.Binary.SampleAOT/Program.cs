@@ -5,6 +5,7 @@
 // built-in converter round-trips — all AOT-safe with no reflection fallback.
 
 using D20Tek.Serialization;
+using D20Tek.Serialization.Binary.Cbor.Converters;
 using D20Tek.Serialization.Binary.SampleAOT.Models;
 using D20Tek.Serialization.Dom;
 
@@ -66,3 +67,61 @@ foreach (var prop in doc.RootElement.EnumerateObject())
 
 Console.WriteLine();
 Console.WriteLine("Sample completed successfully.");
+
+// ─── 4. Order round-trip with enum converter ─────────────────────────────────
+
+var options = new BinarySerializerOptions();
+options.Converters.Add(new EnumCborConverter<OrderStatus>());
+
+var order = new Order
+{
+    OrderId = 1001,
+    CustomerId = 1,
+    Status = OrderStatus.Shipped,
+    Discount = 10.5,
+    PreviousStatus = OrderStatus.Pending,
+};
+
+#pragma warning disable IL2026, IL3050
+byte[] orderBytes = BinarySerializer.SerializeToByteArray(order, options);
+var orderBack = BinarySerializer.Deserialize<Order>(orderBytes, options);
+#pragma warning restore IL2026, IL3050
+
+Console.WriteLine("=== Order round-trip (with EnumCborConverter) ===");
+Console.WriteLine($"  OrderId:        {orderBack!.OrderId}");
+Console.WriteLine($"  CustomerId:     {orderBack.CustomerId}");
+Console.WriteLine($"  Status:         {orderBack.Status}");
+Console.WriteLine($"  Discount:       {orderBack.Discount}");
+Console.WriteLine($"  PreviousStatus: {orderBack.PreviousStatus}");
+Console.WriteLine();
+
+// ─── 5. Custom converter demo ────────────────────────────────────────────────
+
+var customOptions = new BinarySerializerOptions();
+customOptions.Converters.Add(new UpperCaseStringConverter());
+
+#pragma warning disable IL2026, IL3050
+byte[] customBytes = BinarySerializer.SerializeToByteArray("hello world", customOptions);
+var customBack = BinarySerializer.Deserialize<string>(customBytes, customOptions);
+#pragma warning restore IL2026, IL3050
+
+Console.WriteLine("=== Custom converter (UpperCaseStringConverter) ===");
+Console.WriteLine($"  Input:  \"hello world\"");
+Console.WriteLine($"  Output: \"{customBack}\"");
+Console.WriteLine();
+Console.WriteLine("All samples completed successfully.");
+
+// ─── Custom converter: converts strings to UPPER CASE on write ───────────────
+
+/// <summary>
+/// A sample custom converter that transforms strings to upper case during serialization
+/// and reads them back normally. Demonstrates the extensible converter model.
+/// </summary>
+sealed class UpperCaseStringConverter : Converter<string>
+{
+    public override string Read(IFormatReader reader, SerializerOptions options)
+        => reader.GetString();
+
+    public override void Write(IFormatWriter writer, string value, SerializerOptions options)
+        => writer.WriteString(value.ToUpperInvariant());
+}

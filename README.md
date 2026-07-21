@@ -112,6 +112,44 @@ byte[] data = BinarySerializer.SerializeToByteArray(person);
 Person? clone = BinarySerializer.Deserialize<Person>(data);
 ```
 
+### Custom Converter
+
+Register a custom converter to control how specific types are serialized:
+
+```csharp
+// A converter that writes strings as UPPER CASE
+public sealed class UpperCaseStringConverter : Converter<string>
+{
+    public override string Read(IFormatReader reader, SerializerOptions options)
+        => reader.GetString();
+
+    public override void Write(IFormatWriter writer, string value, SerializerOptions options)
+        => writer.WriteString(value.ToUpperInvariant());
+}
+
+var options = new BinarySerializerOptions();
+options.Converters.Add(new UpperCaseStringConverter());
+
+byte[] data = BinarySerializer.SerializeToByteArray("hello", options);
+string? result = BinarySerializer.Deserialize<string>(data, options);
+// result == "HELLO"
+```
+
+### DOM Navigation
+
+Parse raw CBOR bytes and navigate without deserializing into a typed model:
+
+```csharp
+using var doc = BinaryDocument.Parse(data);
+string name = doc.RootElement["Name"].GetString();
+int age = doc.RootElement["Age"].GetInt32();
+
+foreach (var prop in doc.RootElement.EnumerateObject())
+{
+    Console.WriteLine($"{prop.Name} = {prop.Value.ValueKind}");
+}
+```
+
 ### AOT‑Friendly Source Generation
 
 Just annotate your types with `[Serializable]` and enable the generator:

@@ -247,12 +247,12 @@ D20Tek.Serialization.Binary/
 - [x] **4.3.4** Document AOT usage guidance (use `[Serializable]` + generated registry; reflection fallback is non-AOT).
 
 ### 4.4 Tests, Samples & Docs (spec Phase 3.4)
-- [ ] **4.4.1** End-to-end round-trip test suite across nested objects, arrays, all built-in types.
-- [ ] **4.4.2** Allocation tests (e.g., BenchmarkDotNet or allocation asserts) proving zero-copy reader paths.
-- [ ] **4.4.3** Strict vs lenient interop tests (forward/backward-compat scenarios with unknown fields/tags).
-- [ ] **4.4.4** Sample app demonstrating: source-gen serialization, custom converter, DOM read, AOT publish.
-- [ ] **4.4.5** Update `README.md` with Binary quick-start + AOT notes.
-- [ ] **4.4.6** XML doc comment pass over all public APIs; enable `GenerateDocumentationFile`.
+- [x] **4.4.1** End-to-end round-trip test suite across nested objects, arrays, all built-in types.
+- [x] **4.4.2** Allocation tests (e.g., BenchmarkDotNet or allocation asserts) proving zero-copy reader paths.
+- [x] **4.4.3** Strict vs lenient interop tests (forward/backward-compat scenarios with unknown fields/tags).
+- [x] **4.4.4** Sample app demonstrating: source-gen serialization, custom converter, DOM read, AOT publish.
+- [x] **4.4.5** Update `README.md` with Binary quick-start + AOT notes.
+- [x] **4.4.6** XML doc comment pass over all public APIs; enable `GenerateDocumentationFile`.
 
 ### 4.5 Packaging & Release
 - [ ] **4.5.1** Package metadata for both packages (icon, license, repo URL, README, symbols/snupkg).
@@ -309,13 +309,13 @@ D20Tek.Serialization.Binary/
 
 | Phase | Area | Status |
 |-------|------|--------|
-| 1 | Solution/project setup | ☐ Not started |
-| 1 | Core abstractions | ☐ Not started |
-| 1 | Source generator (basic) | ☐ Not started |
-| 2 | Binary options + CBOR writer | ☐ Not started |
-| 2 | CBOR reader (zero-copy + errors) | ☐ Not started |
-| 2 | Reflection serializer + converters | ☐ Not started |
-| 2 | BinarySerializer facade | ☐ Not started |
-| 3 | DOM (parser + document) | ☐ Not started |
+| 1 | Solution/project setup | Done |
+| 1 | Core abstractions | Done |
+| 1 | Source generator (basic) | Done |
+| 2 | Binary options + CBOR writer | Done |
+| 2 | CBOR reader (zero-copy + errors) | Done |
+| 2 | Reflection serializer + converters | Done |
+| 2 | BinarySerializer facade | Done |
+| 3 | DOM (parser + document) | Done |
 | 3 | AOT + tests + samples | ☐ Not started |
 | 3 | Packaging & release | ☐ Not started |
