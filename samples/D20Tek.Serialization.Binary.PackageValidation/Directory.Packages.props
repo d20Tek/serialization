@@ -1,0 +1,7 @@
+<Project>
+  <!-- Opt out of Central Package Management for this standalone validation project.
+	   This project must be fully self-contained using only published NuGet packages. -->
+  <PropertyGroup>
+	<ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+</Project>
