@@ -16,13 +16,13 @@ Deliver two shippable NuGet packages for .NET 10:
 Out of scope for v1.0: YAML/TOML/CSV and other formats (architecture must allow them later, but they are not built now).
 
 ### Definition of Done (release-level)
-- [ ] All public APIs in the spec are implemented and documented with XML doc comments.
-- [ ] Source generator produces serializers for `[Serializable]` types and a per-assembly registry.
-- [ ] Round-trip (serialize → deserialize) works for all CBOR encoding rules in §3.1.
-- [ ] Resolution order (converter → generated → reflection) verified by tests.
-- [ ] Strict and lenient decoding behaviors verified by tests.
-- [ ] Zero-copy reader paths allocate no managed strings for strings/numbers/property names (validated).
-- [ ] AOT/trimming: Binary sample app publishes with NativeAOT and round-trips successfully.
+- [x] All public APIs in the spec are implemented and documented with XML doc comments.
+- [x] Source generator produces serializers for `[Serializable]` types and a per-assembly registry.
+- [x] Round-trip (serialize → deserialize) works for all CBOR encoding rules in §3.1.
+- [x] Resolution order (converter → generated → reflection) verified by tests.
+- [x] Strict and lenient decoding behaviors verified by tests.
+- [x] Zero-copy reader paths allocate no managed strings for strings/numbers/property names (validated).
+- [x] AOT/trimming: Binary sample app publishes with NativeAOT and round-trips successfully.
 - [x] CI builds, runs tests, and packs both packages.
 
 ---
@@ -255,15 +255,15 @@ D20Tek.Serialization.Binary/
 - [x] **4.4.6** XML doc comment pass over all public APIs; enable `GenerateDocumentationFile`.
 
 ### 4.5 Packaging & Release
-- [ ] **4.5.1** Package metadata for both packages (icon, license, repo URL, README, symbols/snupkg).
-- [ ] **4.5.2** Ensure generator ships inside Core package under `analyzers/dotnet/cs`.
-- [ ] **4.5.3** `dotnet pack` produces valid packages; smoke-test install in a clean consumer project.
-- [ ] **4.5.4** Tag-driven publish step in CI.
+- [x] **4.5.1** Package metadata for both packages (icon, license, repo URL, README, symbols/snupkg).
+- [x] **4.5.2** Ensure generator ships inside Core package under `analyzers/dotnet/cs`.
+- [x] **4.5.3** `dotnet pack` produces valid packages; smoke-test install in a clean consumer project.
+- [x] **4.5.4** Tag-driven publish step in CI.
 
 ### Phase 3 Exit Criteria
-- [ ] DOM read works for documents produced by the writer.
-- [ ] AOT sample publishes and round-trips.
-- [ ] Both packages pack and install cleanly.
+- [x] DOM read works for documents produced by the writer.
+- [x] AOT sample publishes and round-trips.
+- [x] Both packages pack and install cleanly.
 
 ---
 
@@ -295,13 +295,13 @@ D20Tek.Serialization.Binary/
 
 ## **6. Cross-Cutting Risks & Decisions**
 
-- [ ] **Zero-copy lifetime**: `GetRawStringBytes/GetRawNumberBytes` slices must stay valid only while the reader's source buffer is alive — document and test lifetime constraints.
-- [ ] **`System.Formats.Cbor` raw-slice access**: verify the library exposes (or can be wrapped to expose) byte slices without copying; if not, design a thin CBOR scanner over `ReadOnlySpan<byte>` to back the reader.
-- [ ] **Indefinite-length rejection**: enforce consistently in both reader and DOM parser.
-- [ ] **Required-member semantics**: align reflection and generated paths (missing required → `SerializationException` at the correct path).
-- [ ] **Registry discovery across assemblies**: define how `BinarySerializer` locates generated registries (module initializer vs. explicit registration) — must be AOT-safe.
-- [ ] **`struct` support**: `[Serializable]` allows structs; ensure generator and reflection handle value types (boxing-free where possible).
-- [ ] **Test framework choice**: confirm house style (MSTest vs xUnit) before scaffolding test projects.
+- [x] **Zero-copy lifetime**: `GetRawStringBytes/GetRawNumberBytes` slices must stay valid only while the reader's source buffer is alive — document and test lifetime constraints.
+- [x] **`System.Formats.Cbor` raw-slice access**: verify the library exposes (or can be wrapped to expose) byte slices without copying; if not, design a thin CBOR scanner over `ReadOnlySpan<byte>` to back the reader.
+- [x] **Indefinite-length rejection**: enforce consistently in both reader and DOM parser.
+- [x] **Required-member semantics**: align reflection and generated paths (missing required → `SerializationException` at the correct path).
+- [x] **Registry discovery across assemblies**: define how `BinarySerializer` locates generated registries (module initializer vs. explicit registration) — must be AOT-safe.
+- [x] **`struct` support**: `[Serializable]` allows structs; ensure generator and reflection handle value types (boxing-free where possible).
+- [x] **Test framework choice**: confirm house style (MSTest vs xUnit) before scaffolding test projects.
 
 ---
 
@@ -317,5 +317,5 @@ D20Tek.Serialization.Binary/
 | 2 | Reflection serializer + converters | Done |
 | 2 | BinarySerializer facade | Done |
 | 3 | DOM (parser + document) | Done |
-| 3 | AOT + tests + samples | ☐ Not started |
-| 3 | Packaging & release | ☐ Not started |
+| 3 | AOT + tests + samples | Done |
+| 3 | Packaging & release | Done |
