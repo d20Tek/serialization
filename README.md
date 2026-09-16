@@ -39,7 +39,7 @@ The initial release will support the shared core types and functionality and a C
 
 ---
 
-## **📦 Packages**
+## ** Packages**
 
 ### **Core**
 - **D20Tek.Serialization.Core**  

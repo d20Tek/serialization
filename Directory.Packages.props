@@ -1,28 +1,23 @@
 <Project>
-
   <!-- Central Package Management: versions are defined here, not in individual projects. -->
   <PropertyGroup>
-	<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-	<CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
-
   <!-- Runtime / library dependencies. -->
   <ItemGroup>
-	<PackageVersion Include="System.Formats.Cbor" Version="10.0.9" />
+    <PackageVersion Include="System.Formats.Cbor" Version="10.0.12" />
   </ItemGroup>
-
-	<!-- Source generator (build-time only). -->
-	<ItemGroup>
-	<PackageVersion Include="Microsoft.CodeAnalysis.Common" Version="4.8.0" />
-	<PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" />
-	</ItemGroup>
-
+  <!-- Source generator (build-time only). -->
+  <ItemGroup>
+    <PackageVersion Include="Microsoft.CodeAnalysis.Common" Version="4.8.0" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" />
+  </ItemGroup>
   <!-- Test dependencies. -->
   <ItemGroup>
-	<PackageVersion Include="coverlet.collector" Version="10.0.1" />
-	<PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.6.0" />
-	<PackageVersion Include="MSTest.TestAdapter" Version="4.2.3" />
-	<PackageVersion Include="MSTest.TestFramework" Version="4.2.3" />
-	</ItemGroup>
-
+    <PackageVersion Include="coverlet.collector" Version="10.0.1" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
+    <PackageVersion Include="MSTest.TestAdapter" Version="4.4.0" />
+    <PackageVersion Include="MSTest.TestFramework" Version="4.4.0" />
+  </ItemGroup>
 </Project>
