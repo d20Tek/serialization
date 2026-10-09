@@ -79,7 +79,7 @@ public sealed class BinarySerializerTests
 
         // act
         BinarySerializer.Serialize(buffer, original);
-        var result = BinarySerializer.Deserialize<SimpleModel>(buffer.WrittenSpan);
+        var result = BinarySerializer.Deserialize<SimpleModel>(buffer.WrittenMemory);
 
         // assert
         Assert.IsNotNull(result);
@@ -121,7 +121,7 @@ public sealed class BinarySerializerTests
         // act & assert
         Assert.ThrowsExactly<ArgumentNullException>(
             [ExcludeFromCodeCoverage] () =>
-                BinarySerializer.Deserialize([], null!));
+                BinarySerializer.Deserialize(Array.Empty<byte>(), null!));
     }
 
     // --- Nested object round-trip ---
@@ -279,7 +279,7 @@ public sealed class BinarySerializerTests
 
         // act — serialize via IBufferWriter, then round-trip back
         BinarySerializer.Serialize(buffer, original);
-        var result = BinarySerializer.Deserialize<GeneratedModel>(buffer.WrittenSpan);
+        var result = BinarySerializer.Deserialize<GeneratedModel>(buffer.WrittenMemory);
 
         // assert
         Assert.IsNotNull(result);

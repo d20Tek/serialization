@@ -58,11 +58,35 @@ internal sealed class ReflectionBinarySerializer
 
     [RequiresUnreferencedCode(ReflectionMessage)]
     [RequiresDynamicCode(ReflectionMessage)]
-    private void WriteObject(IFormatWriter writer, object instance, Type type, BinarySerializerOptions options)
+    private void WriteObject(IFormatWriter writer, object instance, Type declaredType, BinarySerializerOptions options)
     {
-        var metadata = _provider.GetOrAdd(type, options, options.IncludeFields);
+        var actualType = declaredType;
+        PolymorphicTypeInfo? polymorphic = null;
+
+        if (PolymorphicTypeResolver.TryResolve(declaredType, out polymorphic))
+        {
+            actualType = instance.GetType();
+        }
+
+        var metadata = _provider.GetOrAdd(actualType, options, options.IncludeFields);
 
         writer.WriteStartObject();
+
+        if (polymorphic is not null)
+        {
+            if (!polymorphic.TryGetDiscriminator(actualType, out var discriminator))
+            {
+                throw new SerializationException(
+                    $"Type '{actualType}' is not registered as a derived type of polymorphic " +
+                    $"type '{declaredType}'. Annotate '{declaredType}' with " +
+                    $"[SerializedDerivedType(typeof({actualType.Name}), \"...\")].",
+                    "$");
+            }
+
+            writer.WritePropertyName(polymorphic.DiscriminatorPropertyName);
+            writer.WriteString(discriminator);
+        }
+
         foreach (var member in metadata.Members)
         {
             var value = member.Getter(instance);
@@ -102,14 +126,41 @@ internal sealed class ReflectionBinarySerializer
 
     [RequiresUnreferencedCode(ReflectionMessage)]
     [RequiresDynamicCode(ReflectionMessage)]
-    private object? ReadObject(IFormatReader reader, Type type, BinarySerializerOptions options, string parentPath)
+    private object? ReadObject(IFormatReader reader, Type declaredType, BinarySerializerOptions options, string parentPath)
     {
-        var metadata = _provider.GetOrAdd(type, options, options.IncludeFields);
-        var instance = Activator.CreateInstance(type)!;
+        var actualType = declaredType;
+
+        reader.ReadStartObject();
+
+        if (PolymorphicTypeResolver.TryResolve(declaredType, out var polymorphic))
+        {
+            if (!reader.TryReadPropertyName(out var firstName) ||
+                firstName != polymorphic.DiscriminatorPropertyName)
+            {
+                throw new SerializationException(
+                    $"Expected the type discriminator property '{polymorphic.DiscriminatorPropertyName}' " +
+                    $"as the first member of a polymorphic '{declaredType}' value.",
+                    parentPath);
+            }
+
+            var discriminator = reader.GetString();
+            if (!polymorphic.TryGetType(discriminator, out var resolvedType))
+            {
+                throw new SerializationException(
+                    $"Unknown type discriminator '{discriminator}' for polymorphic type " +
+                    $"'{declaredType}'. Register the derived type with " +
+                    $"[SerializedDerivedType(typeof(...), \"{discriminator}\")] on '{declaredType}'.",
+                    parentPath);
+            }
+
+            actualType = resolvedType;
+        }
+
+        var metadata = _provider.GetOrAdd(actualType, options, options.IncludeFields);
+        var instance = Activator.CreateInstance(actualType)!;
         var memberLookup = ConversionHelper.BuildMemberLookup(metadata);
         var seen = new HashSet<string>();
 
-        reader.ReadStartObject();
         while (reader.TryReadPropertyName(out var name))
         {
             if (memberLookup.TryGetValue(name, out var member))
