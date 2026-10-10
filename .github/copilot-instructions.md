@@ -6,3 +6,7 @@
 - Ensure comprehensive branch and condition coverage in unit tests — target all code blocks and conditions in the implementation, not just happy paths.
 - Keep the CBOR converter classes public since they are in a sub-namespace (D20Tek.Serialization.Binary.Cbor.Converters) and won't pollute the main namespace.
 - Use a separate test class for each implementation class, rather than combining tests for multiple classes into a single test file (e.g., one test class per converter, not a combined CborConverterTests).
+
+## Serialization Formats
+- Implement additional binary serialization formats in D20Tek.Serialization, including TLV (Type-Length-Value), MessagePack (wrapping MessagePack-CSharp's low-level reader/writer APIs), and a fixed-width/struct-layout format for game-dev style save/replication data.
+- Support custom/user-defined binary serializers via the IFormatReader/IFormatWriter extensibility pattern.
