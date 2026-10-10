@@ -9,13 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Fix zero-copy regression in span-based `Deserialize`
-- Polymorphic / type-discriminator serialization (done) | Binary |
-- Streaming (`Stream` + async) overloads (done) | Binary |
-- Record / init-only property support audit (audited, gaps documented) | Binary |
-- Converter factories for open generics (done) | Core |
-- Field rename aliasing (done) | Core |
-- Source generator: support `init`-only property accessors (done) | Binary |
-- Constructor-based construction for positional records (done) | Binary |
+- Polymorphic / type-discriminator serialization
+- Streaming (`Stream` + async) overloads
+- Record / init-only property support audit (audited, gaps documented)
+- Converter factories for open generics
+- Field rename aliasing
+- Source generator: support `init`-only property accessors
+- Constructor-based construction for positional records
+- Updated reflection and AOT samples to include round-trip serialization of records and polymorphic types.
 
 ### Changed
 

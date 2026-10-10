@@ -87,7 +87,28 @@ Console.WriteLine($"  Discount:       {orderBack.Discount}");
 Console.WriteLine($"  PreviousStatus: {orderBack.PreviousStatus}");
 Console.WriteLine();
 
-// ─── 5. Custom converter demo (reflection path) ───────────────
+// ─── 5. Polymorphic round-trip (reflection path) ──────────────
+
+var owner = new Owner
+{
+    Name = "Jordan",
+    Pet = new Dog { Name = "Rex", Breed = "Labrador" }
+};
+
+byte[] ownerBytes = BinarySerializer.SerializeToByteArray(owner);
+var ownerBack = BinarySerializer.Deserialize<Owner>(ownerBytes);
+
+Console.WriteLine("=== Polymorphic round-trip (reflection) ===");
+Console.WriteLine($"  Owner.Name:     {ownerBack!.Name}");
+Console.WriteLine($"  Pet runtime type: {ownerBack.Pet!.GetType().Name}");
+if (ownerBack.Pet is Dog dogBack)
+{
+    Console.WriteLine($"  Pet.Name:       {dogBack.Name}");
+    Console.WriteLine($"  Pet.Breed:      {dogBack.Breed}");
+}
+Console.WriteLine();
+
+// ─── 6. Custom converter demo (reflection path) ───────────────
 
 var customOptions = new BinarySerializerOptions();
 customOptions.Converters.Add(new UpperCaseStringConverter());
@@ -100,7 +121,7 @@ Console.WriteLine($"  Input:  \"hello world\"");
 Console.WriteLine($"  Output: \"{customBack}\"");
 Console.WriteLine();
 
-// ─── 6. Camel-case naming policy demo ───────────────────────
+// ─── 7. Camel-case naming policy demo ───────────────────────
 
 var camelOptions = new BinarySerializerOptions
 {
