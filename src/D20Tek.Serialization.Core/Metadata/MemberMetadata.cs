@@ -15,6 +15,10 @@ namespace D20Tek.Serialization.Metadata;
 /// <param name="ignoreNull">Whether the member is omitted when its value is <see langword="null"/>.</param>
 /// <param name="getter">A compiled delegate that reads the member value from an instance.</param>
 /// <param name="setter">A compiled delegate that writes the member value to an instance.</param>
+/// <param name="aliases">
+/// Legacy serialized names also accepted when deserializing the member, in addition to
+/// <paramref name="serializedName"/>. Empty when the member has no configured aliases.
+/// </param>
 internal sealed class MemberMetadata(
     string name,
     string serializedName,
@@ -22,7 +26,8 @@ internal sealed class MemberMetadata(
     bool isRequired,
     bool ignoreNull,
     Func<object, object?> getter,
-    Action<object, object?> setter)
+    Action<object, object?> setter,
+    IReadOnlyList<string>? aliases = null)
 {
     /// <summary>
     /// Gets the .NET member name.
@@ -34,6 +39,13 @@ internal sealed class MemberMetadata(
     /// <see cref="NameSerializedAttribute"/> or configured <see cref="NamingPolicy"/>.
     /// </summary>
     public string SerializedName { get; } = serializedName;
+
+    /// <summary>
+    /// Gets the legacy serialized names also accepted when deserializing the member, in
+    /// addition to <see cref="SerializedName"/>. Empty when the member has no configured
+    /// aliases.
+    /// </summary>
+    public IReadOnlyList<string> Aliases { get; } = aliases ?? [];
 
     /// <summary>
     /// Gets the declared type of the member.

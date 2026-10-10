@@ -1,8 +1,10 @@
 using D20Tek.Serialization.Binary.Cbor;
 using D20Tek.Serialization.Binary.Reflection;
 using D20Tek.Serialization.Generation;
+using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace D20Tek.Serialization;
 
@@ -23,6 +25,14 @@ internal static class SerializerResolutionHelper
         "for an AOT-safe path.";
 
     private static readonly ReflectionBinarySerializer s_reflectionSerializer = new();
+
+    /// <summary>
+    /// Caches converters created by <see cref="ConverterFactory.CreateConverter(Type)"/>,
+    /// keyed per-factory-instance then per-type, so repeated resolution for the same closed
+    /// generic type does not re-invoke the factory on every call.
+    /// </summary>
+    private static readonly ConditionalWeakTable<ConverterFactory, ConcurrentDictionary<Type, Converter>>
+        s_factoryConverterCache = new();
 
     [RequiresUnreferencedCode(ReflectionFallbackMessage)]
     [RequiresDynamicCode(ReflectionFallbackMessage)]
@@ -51,15 +61,41 @@ internal static class SerializerResolutionHelper
     {
         foreach (var candidate in options.Converters)
         {
-            if (candidate.CanConvert(typeof(T)) && candidate is Converter<T> typed)
+            if (!candidate.CanConvert(typeof(T)))
+            {
+                continue;
+            }
+
+            if (candidate is Converter<T> typed)
             {
                 converter = typed;
+                return true;
+            }
+
+            if (candidate is ConverterFactory factory &&
+                GetOrCreateConverter(factory, typeof(T)) is Converter<T> created)
+            {
+                converter = created;
                 return true;
             }
         }
 
         converter = null;
         return false;
+    }
+
+    /// <summary>
+    /// Resolves the non-generic <see cref="Converter"/> instance that will actually handle
+    /// <paramref name="typeToConvert"/>: the candidate itself for ordinary converters, or the
+    /// converter produced (and cached) by a <see cref="ConverterFactory"/>.
+    /// </summary>
+    internal static Converter ResolveConverter(Converter candidate, Type typeToConvert) =>
+        candidate is ConverterFactory factory ? GetOrCreateConverter(factory, typeToConvert) : candidate;
+
+    private static Converter GetOrCreateConverter(ConverterFactory factory, Type typeToConvert)
+    {
+        var cache = s_factoryConverterCache.GetOrCreateValue(factory);
+        return cache.GetOrAdd(typeToConvert, factory.CreateConverter);
     }
 
     [UnconditionalSuppressMessage("Trimming", "IL2026",

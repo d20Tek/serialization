@@ -161,7 +161,7 @@ internal static class SerializerEmitter
             {
                 var keyword = first ? "if" : "else if";
                 first = false;
-                writer.Line($"{keyword} (__name == ({SerializedNameExpression(member)}))");
+                writer.Line($"{keyword} ({ReadNameConditionExpression(member)})");
                 writer.OpenBrace();
                 EmitReadMember(writer, member);
                 if (member.IsRequired)
@@ -243,6 +243,18 @@ internal static class SerializerEmitter
         member.SerializedName is not null
             ? Literal(member.SerializedName)
             : $"options.PropertyNamingPolicy?.ConvertName({Literal(member.MemberName)}) ?? {Literal(member.MemberName)}";
+
+    private static string ReadNameConditionExpression(MemberModel member)
+    {
+        var condition = $"__name == ({SerializedNameExpression(member)})";
+
+        foreach (var alias in member.Aliases)
+        {
+            condition += $" || __name == {Literal(alias)}";
+        }
+
+        return condition;
+    }
 
     private static string Literal(string value) =>
         "\"" + value.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";

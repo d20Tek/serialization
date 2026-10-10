@@ -41,14 +41,64 @@
   root values. Source-generator support is not yet implemented; polymorphic types currently go
   through the reflection path.)*
 
-- [ ] **P1 — Streaming support (`Stream`-based and async overloads).**
+- [x] **P1 — Streaming support (`Stream`-based and async overloads).**
   Add `Serialize`/`Deserialize` overloads that read from and write to `Stream` (with async
   variants) so large payloads don't require materializing a full `byte[]` up front.
+  *(Resolved: `BinarySerializer` now exposes `Serialize`/`Deserialize` and
+  `SerializeAsync`/`DeserializeAsync` overloads that accept a `Stream`. Serialization encodes
+  to an in-memory CBOR buffer and writes it to the stream in one call (sync or async); CBOR
+  decoding still requires buffering the full document, so deserialization reads the stream to
+  completion — via the existing buffer directly for `MemoryStream`, or `CopyTo`/`CopyToAsync`
+  otherwise — before decoding through the existing byte-buffer path.)*
 
-- [ ] **P1 — Record / init-only property support audit.**
+- [x] **P1 — Record / init-only property support audit.**
   Verify both the source generator and the reflection fallback correctly handle `record` types
   and `init`-only accessors, not just mutable POCOs. This is a common pain point for modern C#
   codebases.
+  *(Audited — gaps found, not yet fixed. See `RecordAndInitOnlyGeneratorTests` and
+  `RecordAndInitOnlyReflectionTests`:*
+  - *`record` types with ordinary `get; set;` properties work today in both the generator and
+    the reflection fallback (records behave like classes when there's no init-only accessor or
+    primary constructor involved).*
+  - *`init`-only accessors are **not rejected** by `ModelBuilder`'s setter-accessibility check
+    (an `init` accessor reports as publicly accessible), but `SerializerEmitter.EmitReadMember`
+    emits a plain `result.Member = value;` assignment after construction. For `init`-only
+    properties this is illegal post-construction and fails to compile with `CS8852`. The
+    generator currently has no way to route `init`-only members through an object-initializer
+    or constructor-based construction path.*
+  - *The reflection fallback (`TypeMetadataBuilder`/`ReflectionBinarySerializer`) can actually
+    set `init`-only properties successfully, because `Expression.Assign` against the property
+    setter is permitted here (the C# `init` restriction is enforced by the compiler at the call
+    site, not by the CLR), and `ReadObject` constructs the instance before assigning members. So
+    `init`-only reflection round-trips work correctly today.*
+  - *Positional records (and any type without a public parameterless constructor) are not
+    supported by the reflection fallback — `ReadObject` calls
+    `Activator.CreateInstance(actualType)` with no arguments, which throws
+    `MissingMethodException` for such types. The generator has the same limitation since it
+    emits `new {Type}()`.*
+  - *Follow-up work (not yet implemented): generator support for `init`-only members via
+    object-initializer syntax in `Read`, and/or constructor-based construction for both the
+    generator and reflection fallback to support positional records.)*
+
+- [ ] **P2 — Source generator: support `init`-only property accessors.**
+  `ModelBuilder` accepts `init`-only properties as having an accessible setter, but
+  `SerializerEmitter.EmitReadMember` assigns them via `result.Member = value;` after
+  construction, which fails to compile with `CS8852` for `init`-only properties. Emit via
+  object-initializer syntax (`new T { Member = value, ... }`) instead of post-construction
+  assignment for types whose serializable members are all settable via an object initializer,
+  so `init`-only properties are supported as documented in the v1.1 record/init-only audit
+  above.
+
+- [ ] **P2 — Constructor-based construction for positional records / types without a
+  parameterless constructor.**
+  Both the reflection fallback (`ReflectionBinarySerializer.ReadObject`, via
+  `Activator.CreateInstance(actualType)`) and the generated `Read` method
+  (`new {FullyQualifiedName}()`) require a public parameterless constructor, so positional
+  records (e.g. `public sealed record Person(int Id, string? Name);`) throw
+  `MissingMethodException` on deserialize. Add support for matching serializable members to a
+  public constructor's parameters (by name, case-insensitively) and invoking that constructor
+  with buffered member values, falling back to the current parameterless-constructor path when
+  one exists.
 
 - [ ] **P2 — `IBufferWriter<byte>` support for `CborFormatWriter`.**
   Allow writing directly to `IBufferWriter<byte>` to avoid intermediate buffer copies when
@@ -82,16 +132,32 @@
 
 ## 2. Core Library
 
-- [ ] **P1 — Converter factories for open generic types.**
+- [x] **P1 — Converter factories for open generic types.**
   `Converter<T>` only covers closed generic types. A `ConverterFactory` abstraction (similar to
   `JsonConverterFactory`) would let a single factory handle open generics (e.g.,
   `Nullable<T>`, custom `Dictionary<TKey, TValue>` variants) without combinatorial explosion of
   converter classes.
+  *(Resolved: added `D20Tek.Serialization.ConverterFactory`, an abstract `Converter` subtype
+  with `CreateConverter(Type)`. Register factory instances in `SerializerOptions.Converters`
+  alongside ordinary converters; `Converter.CanConvert(Type)` still gates whether a given
+  factory applies. `SerializerResolutionHelper` resolves factories for both the generic
+  (`TryGetConverter<T>`) and non-generic (`BinarySerializer.Deserialize(..., Type, ...)` via
+  `ResolveConverter`) paths, and caches the converter produced per factory-instance/closed-type
+  pair in a `ConditionalWeakTable` so repeated resolution doesn't re-invoke the factory. Covered
+  by `ConverterFactoryTests` (Core) and `ConverterFactoryResolutionTests` (Binary, round-trips
+  through `BinarySerializer` for multiple closed generic types).)*
 
-- [ ] **P1 — Field rename aliasing for schema evolution.**
-  Since lenient mode already supports unknown-field skipping, add an explicit alias mechanism
-  (e.g., `[NameSerialized("new_name", "old_name")]`) to support renaming fields without
-  breaking older payloads.
+- [x] **P1 — Field rename aliasing for schema evolution.** *(Done: `NameSerializedAttribute`
+  now accepts `params string[] aliases`, e.g. `[NameSerialized("new_name", "old_name")]`.
+  Reflection metadata (`MemberMetadata`, `TypeMetadataBuilder`) carries aliases, and
+  `ConversionHelper.BuildMemberLookup` registers each alias alongside the canonical serialized
+  name (canonical name always wins on collision). The source generator's `MemberModel` and
+  `ModelBuilder` parse the same constructor arguments, and `SerializerEmitter` emits read-side
+  `__name == canonical || __name == alias...` conditions. Writes always emit only the canonical
+  name in both reflection and generated paths; aliases are read-only fallbacks. Required-member
+  tracking keys off the member, so satisfying it via an alias still counts. Covered by
+  `AttributeTests` (Core), `ReflectionBinarySerializerTests` alias round-trip/required tests
+  (Binary), and `ModelBuilderTests`/`SerializerEmitterTests` (Generator).)*
 
 - [ ] **P2 — Additional built-in naming policies.**
   Only `CamelCase` exists today. Add `SnakeCase`, `KebabCase`, and an explicit `PascalCase` to
@@ -140,11 +206,40 @@ Based on priority and risk, a reasonable first pass at v1.1 scope:
 
 | Priority | Item | Area |
 |----------|------|------|
-| P0 | Fix zero-copy regression in span-based `Deserialize` | Binary |
+| P0 | ~~Fix zero-copy regression in span-based `Deserialize`~~ (done) | Binary |
 | P1 | ~~Polymorphic / type-discriminator serialization~~ (done) | Binary |
-| P1 | Streaming (`Stream` + async) overloads | Binary |
-| P1 | Record / init-only property support audit | Binary |
-| P1 | Converter factories for open generics | Core |
-| P1 | Field rename aliasing | Core |
+| P1 | ~~Streaming (`Stream` + async) overloads~~ (done) | Binary |
+| P1 | ~~Record / init-only property support audit~~ (audited, gaps documented) | Binary |
+| P1 | ~~Converter factories for open generics~~ (done) | Core |
+| P1 | ~~Field rename aliasing~~ (done) | Core |
+| P2 | Source generator: support `init`-only property accessors | Binary |
+| P2 | Constructor-based construction for positional records | Binary |
 
 Remaining P2/P3 items can be deferred to v1.2 or picked up opportunistically.
+
+---
+
+## 5. Suggested Triage for v1.2
+
+The two P1 items from the record/init-only audit (`init`-only property accessor support and
+constructor-based construction for positional records) are already tracked in the v1.1 triage
+table above. The remaining P2/P3 items from this document are proposed for v1.2:
+
+| Priority | Item | Area |
+|----------|------|------|
+| P2 | Circular reference guard | Binary |
+| P2 | Collection converter coverage audit (`HashSet<T>`, non-string-key dictionaries, jagged arrays) | Binary |
+| P2 | Source-gen inheritance support audit | Binary |
+| P2 | Additional built-in naming policies (`SnakeCase`, `KebabCase`, `PascalCase`) | Core |
+| P2 | Per-member conditional serialization | Core |
+| P2 | Post-deserialization validation hook | Core |
+| P2 | `IBufferWriter<byte>` support for `CborFormatWriter` | Binary |
+| P2 | `Node` DOM mutation / builder API | Core |
+| P3 | CBOR semantic tag support | Binary |
+| P3 | Thread-safety documentation and verification | Core |
+| P3 | Exception context enrichment (byte offset) | Core |
+| P3 | Benchmark suite (generated vs. reflection vs. `System.Text.Json`) | Binary |
+| P3 | XML doc coverage pass for new additions | Docs |
+| P3 | Migration guide from `System.Text.Json` | Docs |
+
+Remaining P3 items can be deferred further or picked up opportunistically as bandwidth allows.

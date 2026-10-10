@@ -306,6 +306,58 @@ public sealed class SerializerEmitterTests
     }
 
     [TestMethod]
+    public void Emit_MemberWithAliases_WriteUsesCanonicalNameOnly()
+    {
+        // arrange
+        var model = ModelFactory.Type(
+            members: ModelFactory.Member(
+                "Value",
+                MemberStrategy.String,
+                serializedName: "new_name",
+                aliases: ["old_name", "older_name"]));
+
+        // act
+        var source = SerializerEmitter.Emit(model);
+
+        // assert
+        Assert.Contains("writer.WritePropertyName(\"new_name\");", source);
+        Assert.DoesNotContain("writer.WritePropertyName(\"old_name\");", source);
+        Assert.DoesNotContain("writer.WritePropertyName(\"older_name\");", source);
+    }
+
+    [TestMethod]
+    public void Emit_MemberWithAliases_ReadMatchesCanonicalAndAliasNames()
+    {
+        // arrange
+        var model = ModelFactory.Type(
+            members: ModelFactory.Member(
+                "Value",
+                MemberStrategy.String,
+                serializedName: "new_name",
+                aliases: ["old_name", "older_name"]));
+
+        // act
+        var source = SerializerEmitter.Emit(model);
+
+        // assert
+        Assert.Contains("__name == (\"new_name\") || __name == \"old_name\" || __name == \"older_name\"", source);
+    }
+
+    [TestMethod]
+    public void Emit_MemberWithoutAliases_ReadMatchesCanonicalNameOnly()
+    {
+        // arrange
+        var model = ModelFactory.Type(
+            members: ModelFactory.Member("Value", MemberStrategy.String, serializedName: "new_name"));
+
+        // act
+        var source = SerializerEmitter.Emit(model);
+
+        // assert
+        Assert.Contains("if (__name == (\"new_name\"))", source);
+    }
+
+    [TestMethod]
     public void Emit_ImplementsGeneratedSerializerInterface()
     {
         // arrange

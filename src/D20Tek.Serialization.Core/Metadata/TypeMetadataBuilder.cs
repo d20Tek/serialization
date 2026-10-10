@@ -80,7 +80,8 @@ internal static class TypeMetadataBuilder
         NamingPolicy? namingPolicy,
         bool ignoreNull)
     {
-        var serializedName = ResolveSerializedName(member, namingPolicy);
+        var nameAttribute = member.GetCustomAttribute<NameSerializedAttribute>(inherit: true);
+        var serializedName = ResolveSerializedName(member, nameAttribute, namingPolicy);
         var isRequired = member.IsDefined(typeof(RequiredSerializedAttribute), inherit: true);
 
         return new MemberMetadata(
@@ -90,14 +91,13 @@ internal static class TypeMetadataBuilder
             isRequired,
             ignoreNull,
             CompileGetter(member),
-            CompileSetter(member, memberType));
+            CompileSetter(member, memberType),
+            nameAttribute?.Aliases);
     }
 
-    private static string ResolveSerializedName(MemberInfo member, NamingPolicy? namingPolicy)
-    {
-        var custom = member.GetCustomAttribute<NameSerializedAttribute>(inherit: true);
-        return custom?.Name ?? namingPolicy?.ConvertName(member.Name) ?? member.Name;
-    }
+    private static string ResolveSerializedName(
+        MemberInfo member, NameSerializedAttribute? nameAttribute, NamingPolicy? namingPolicy) =>
+        nameAttribute?.Name ?? namingPolicy?.ConvertName(member.Name) ?? member.Name;
 
     [RequiresDynamicCode(ReflectionMessage)]
     private static Func<object, object?> CompileGetter(MemberInfo member)

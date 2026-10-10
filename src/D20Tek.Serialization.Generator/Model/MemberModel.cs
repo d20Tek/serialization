@@ -13,10 +13,15 @@ namespace D20Tek.Serialization.Generation;
 /// <param name="Strategy">How the member is read/written.</param>
 /// <param name="IsNullable">Whether the member may hold <see langword="null"/> (reference type or <see cref="System.Nullable{T}"/>).</param>
 /// <param name="IsRequired">Whether the member is annotated with <c>[RequiredSerialized]</c>.</param>
+/// <param name="Aliases">
+/// Legacy serialized names also accepted when deserializing the member, from
+/// <c>[NameSerialized]</c>'s <c>aliases</c> parameter. Empty when none are configured.
+/// </param>
 internal sealed record MemberModel(
     string MemberName,
     string? SerializedName,
     string FullyQualifiedTypeName,
     MemberStrategy Strategy,
     bool IsNullable,
-    bool IsRequired) : IEquatable<MemberModel>;
+    bool IsRequired,
+    EquatableArray<string> Aliases) : IEquatable<MemberModel>;

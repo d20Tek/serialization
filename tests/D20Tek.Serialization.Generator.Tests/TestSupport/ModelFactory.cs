@@ -17,14 +17,16 @@ internal static class ModelFactory
         string? fullyQualifiedTypeName = null,
         string? serializedName = null,
         bool isNullable = false,
-        bool isRequired = false) =>
+        bool isRequired = false,
+        params string[] aliases) =>
         new(
             name,
             serializedName,
             fullyQualifiedTypeName ?? DefaultTypeName(strategy, isNullable),
             strategy,
             isNullable,
-            isRequired);
+            isRequired,
+            aliases.ToImmutableArray().ToEquatableArray());
 
     public static SerializableTypeModel Type(
         string typeName = "Sample",

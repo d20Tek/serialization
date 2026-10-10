@@ -1,5 +1,6 @@
 using D20Tek.Serialization.Generation;
 using D20Tek.Serialization.Generator.Tests.TestSupport;
+using System.Linq;
 
 namespace D20Tek.Serialization.Generator.Tests;
 
@@ -253,6 +254,132 @@ public sealed class ModelBuilderTests
     }
 
     [TestMethod]
+    public void Build_NameSerializedAttribute_WithoutAliases_HasEmptyAliases()
+    {
+        // arrange
+        const string source = """
+            namespace Sample;
+
+            [D20Tek.Serialization.Serializable]
+            public sealed class Aliased
+            {
+                [D20Tek.Serialization.NameSerialized("custom_name")]
+                public int Id { get; set; }
+            }
+            """;
+
+        // act
+        var member = BuildMember(source, "Sample.Aliased", "Id");
+
+        // assert
+        Assert.AreEqual(0, member.Aliases.Count);
+    }
+
+    [TestMethod]
+    public void Build_NameSerializedAttribute_WithAliases_SetsAliases()
+    {
+        // arrange
+        const string source = """
+            namespace Sample;
+
+            [D20Tek.Serialization.Serializable]
+            public sealed class Aliased
+            {
+                [D20Tek.Serialization.NameSerialized("new_name", "old_name", "older_name")]
+                public int Id { get; set; }
+            }
+            """;
+
+        // act
+        var member = BuildMember(source, "Sample.Aliased", "Id");
+
+        // assert
+        Assert.AreEqual("new_name", member.SerializedName);
+        Assert.AreSequenceEqual(["old_name", "older_name"], [.. member.Aliases]);
+    }
+
+    [TestMethod]
+    public void Build_WithoutNameSerializedAttribute_HasEmptyAliases()
+    {
+        // arrange & act
+        var member = BuildMember(AllTypesSource, "Sample.AllTypes", "IntValue");
+
+        // assert
+        Assert.AreEqual(0, member.Aliases.Count);
+    }
+
+    [TestMethod]
+    public void Build_NameSerializedAttribute_WithExplicitEmptyAliasesArray_HasEmptyAliases()
+    {
+        // arrange
+        const string source = """
+            namespace Sample;
+
+            [D20Tek.Serialization.Serializable]
+            public sealed class Aliased
+            {
+                [D20Tek.Serialization.NameSerialized("custom_name", new string[0])]
+                public int Id { get; set; }
+            }
+            """;
+
+        // act
+        var member = BuildMember(source, "Sample.Aliased", "Id");
+
+        // assert
+        Assert.AreEqual("custom_name", member.SerializedName);
+        Assert.AreEqual(0, member.Aliases.Count);
+    }
+
+    [TestMethod]
+    public void Build_NameSerializedAttribute_WithNullAliasesArgument_HasEmptyAliases()
+    {
+        // arrange
+        const string source = """
+            namespace Sample;
+
+            [D20Tek.Serialization.Serializable]
+            public sealed class Aliased
+            {
+                [D20Tek.Serialization.NameSerialized("custom_name", null)]
+                public int Id { get; set; }
+            }
+            """;
+
+        // act
+        var member = BuildMember(source, "Sample.Aliased", "Id");
+
+        // assert
+        Assert.AreEqual("custom_name", member.SerializedName);
+        Assert.AreEqual(0, member.Aliases.Count);
+    }
+
+    [TestMethod]
+    public void Build_NameSerializedAttribute_WithOtherAttributesPresent_StillResolvesAliases()
+    {
+        // arrange
+        const string source = """
+            namespace Sample;
+
+            [D20Tek.Serialization.Serializable]
+            public sealed class Aliased
+            {
+                [D20Tek.Serialization.RequiredSerialized]
+                [D20Tek.Serialization.NameSerialized("new_name", "old_name")]
+                public int Id { get; set; }
+            }
+            """;
+
+        // act
+        var member = BuildMember(source, "Sample.Aliased", "Id");
+
+        // assert
+        Assert.AreEqual("new_name", member.SerializedName);
+        Assert.AreSequenceEqual(["old_name"], [.. member.Aliases]);
+    }
+
+
+    [TestMethod]
     public void Build_RequiredSerializedAttribute_MarksMemberRequired()
     {
         // arrange
@@ -496,7 +623,7 @@ public sealed class ModelBuilderTests
         var model = ModelBuilder.Build(symbol);
 
         // assert
-        CollectionAssert.AreEqual(expected, model.Members.Select(m => m.MemberName).ToArray());
+        Assert.AreSequenceEqual(expected, [.. model.Members.Select(m => m.MemberName)]);
     }
 
     private static MemberModel BuildMember(string source, string metadataName, string memberName)

@@ -93,7 +93,7 @@ public sealed class BinarySerializerTests
     {
         // act & assert
         Assert.ThrowsExactly<ArgumentNullException>([ExcludeFromCodeCoverage] () =>
-            BinarySerializer.Serialize(null!, new SimpleModel()));
+            BinarySerializer.Serialize((IBufferWriter<byte>)null!, new SimpleModel()));
     }
 
     // --- Non-generic Deserialize ---

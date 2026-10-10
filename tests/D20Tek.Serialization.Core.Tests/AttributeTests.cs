@@ -69,6 +69,32 @@ public sealed class AttributeTests
     }
 
     [TestMethod]
+    public void SerializedNameAttribute_Aliases_DefaultsToEmpty()
+    {
+        // arrange
+        var attribute = new NameSerializedAttribute("first_name");
+
+        // act
+        var aliases = attribute.Aliases;
+
+        // assert
+        Assert.IsEmpty(aliases);
+    }
+
+    [TestMethod]
+    public void SerializedNameAttribute_ExposesAliasesFromConstructor()
+    {
+        // arrange
+        var attribute = new NameSerializedAttribute("first_name", "fname", "given_name");
+
+        // act
+        var aliases = attribute.Aliases;
+
+        // assert
+        Assert.AreSequenceEqual(["fname", "given_name"], [.. aliases]);
+    }
+
+    [TestMethod]
     public void IgnoreSerializedAttribute_IsSealed()
     {
         // arrange

@@ -10,6 +10,16 @@ internal static class ConversionHelper
         foreach (var member in metadata.Members)
         {
             lookup[member.SerializedName] = member;
+
+            foreach (var alias in member.Aliases)
+            {
+                // Aliases are read-only fallbacks; the primary serialized name always wins if
+                // it collides with an alias from another member.
+                if (!lookup.ContainsKey(alias))
+                {
+                    lookup[alias] = member;
+                }
+            }
         }
 
         return lookup;

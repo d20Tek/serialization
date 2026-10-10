@@ -362,6 +362,84 @@ public sealed class ReflectionBinarySerializerTests
         Assert.AreEqual("hello", result.Value);
     }
 
+    // --- NameSerialized aliases ---
+
+    [TestMethod]
+    public void RoundTrip_NameSerializedAttribute_WritesCanonicalNameOnly()
+    {
+        // arrange
+        var options = new BinarySerializerOptions();
+        var original = new AliasModel { Value = "hello" };
+
+        // act
+        var bytes = Serialize(original, options);
+        var result = Deserialize<AliasModel>(bytes, options);
+
+        // assert
+        Assert.IsNotNull(result);
+        Assert.AreEqual("hello", result.Value);
+    }
+
+    [TestMethod]
+    public void Deserialize_LegacyAliasName_PopulatesMember()
+    {
+        // arrange
+        var options = new BinarySerializerOptions();
+        var writer = new CborFormatWriter();
+        writer.WriteStartObject();
+        writer.WritePropertyName("old_name");
+        writer.WriteString("legacy value");
+        writer.WriteEndObject();
+        var bytes = writer.Encode();
+
+        // act
+        var result = Deserialize<AliasModel>(bytes, options);
+
+        // assert
+        Assert.IsNotNull(result);
+        Assert.AreEqual("legacy value", result.Value);
+    }
+
+    [TestMethod]
+    public void Deserialize_AnotherLegacyAliasName_PopulatesMember()
+    {
+        // arrange
+        var options = new BinarySerializerOptions();
+        var writer = new CborFormatWriter();
+        writer.WriteStartObject();
+        writer.WritePropertyName("older_name");
+        writer.WriteString("even older value");
+        writer.WriteEndObject();
+        var bytes = writer.Encode();
+
+        // act
+        var result = Deserialize<AliasModel>(bytes, options);
+
+        // assert
+        Assert.IsNotNull(result);
+        Assert.AreEqual("even older value", result.Value);
+    }
+
+    [TestMethod]
+    public void Deserialize_LegacyAliasName_SatisfiesRequiredMember()
+    {
+        // arrange
+        var options = new BinarySerializerOptions();
+        var writer = new CborFormatWriter();
+        writer.WriteStartObject();
+        writer.WritePropertyName("old_name");
+        writer.WriteString("legacy value");
+        writer.WriteEndObject();
+        var bytes = writer.Encode();
+
+        // act
+        var result = Deserialize<AliasRequiredModel>(bytes, options);
+
+        // assert
+        Assert.IsNotNull(result);
+        Assert.AreEqual("legacy value", result.Value);
+    }
+
     // --- IgnoreSerialized attribute ---
 
     [TestMethod]
@@ -469,5 +547,18 @@ public sealed class ReflectionBinarySerializerTests
 
         [IgnoreSerialized]
         public string? Secret { get; set; }
+    }
+
+    public class AliasModel
+    {
+        [NameSerialized("new_name", "old_name", "older_name")]
+        public string? Value { get; set; }
+    }
+
+    public class AliasRequiredModel
+    {
+        [NameSerialized("new_name", "old_name")]
+        [RequiredSerialized]
+        public string? Value { get; set; }
     }
 }
