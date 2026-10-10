@@ -20,10 +20,7 @@ internal sealed record LocationInfo(string FilePath, TextSpanInfo Span, LinePosi
     public static LocationInfo? CreateFrom(Location? location)
     {
         location ??= Location.None;
-        if (location.SourceTree is null)
-        {
-            return null;
-        }
+        if (location.SourceTree is null) return null;
 
         var span = location.SourceSpan;
         var lineSpan = location.GetLineSpan().Span;

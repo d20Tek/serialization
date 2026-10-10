@@ -45,11 +45,27 @@ internal static class TypeMetadataBuilder
         var ignoreNull = options.IgnoreNullValues;
         var members = new List<MemberMetadata>();
 
+        var hasParameterlessConstructor =
+            type.IsValueType || type.GetConstructor(Type.EmptyTypes) is not null;
+        var constructor = hasParameterlessConstructor ? null : ResolveConstructor(type);
+        var constructorParameterIndexes = constructor?.GetParameters()
+            .Select((p, index) => (p.Name, index))
+            .Where(p => p.Name is not null)
+            .ToDictionary(p => p.Name!, p => p.index, StringComparer.OrdinalIgnoreCase);
+
         foreach (var property in type.GetProperties(MemberFlags))
         {
-            if (IsNotSerializableProperty(property)) continue;
+            if (property.GetIndexParameters().Length > 0 || !property.CanRead || IsIgnored(property)) continue;
 
-            members.Add(CreateMember(property, property.PropertyType, namingPolicy, ignoreNull));
+            var constructorParameterIndex = constructorParameterIndexes is not null &&
+                constructorParameterIndexes.TryGetValue(property.Name, out var index)
+                ? index
+                : (int?)null;
+
+            if (!property.CanWrite && constructorParameterIndex is null) continue;
+
+            members.Add(CreateMember(
+                property, property.PropertyType, namingPolicy, ignoreNull, constructorParameterIndex));
         }
 
         if (includeFields)
@@ -58,17 +74,37 @@ internal static class TypeMetadataBuilder
             {
                 if (IsNotSerializableField(field)) continue;
 
-                members.Add(CreateMember(field, field.FieldType, namingPolicy, ignoreNull));
+                members.Add(CreateMember(field, field.FieldType, namingPolicy, ignoreNull, null));
             }
         }
 
-        return new(type, members);
+        return new(type, members, constructor);
+    }
+
+    /// <summary>
+    /// Finds a public constructor whose parameters can be matched (by name, case-insensitively,
+    /// and by assignable type) to the type's readable public properties, so an instance can be
+    /// constructed directly when no parameterless constructor is available (e.g. positional
+    /// records). Prefers the constructor with the most parameters among those that fully match.
+    /// </summary>
+    [RequiresUnreferencedCode(ReflectionMessage)]
+    [RequiresDynamicCode(ReflectionMessage)]
+    private static System.Reflection.ConstructorInfo? ResolveConstructor(Type type)
+    {
+        var properties = type.GetProperties(MemberFlags)
+            .Where(p => p.GetIndexParameters().Length == 0 && p.CanRead)
+            .ToDictionary(p => p.Name, StringComparer.OrdinalIgnoreCase);
+
+        return type.GetConstructors(BindingFlags.Public | BindingFlags.Instance)
+            .Where(c => c.GetParameters().Length > 0)
+            .OrderByDescending(c => c.GetParameters().Length)
+            .FirstOrDefault(c => c.GetParameters().All(p =>
+                p.Name is not null &&
+                properties.TryGetValue(p.Name, out var property) &&
+                property.PropertyType == p.ParameterType));
     }
 
     private static bool IsNotSerializableField(FieldInfo field) => field.IsInitOnly || IsIgnored(field);
-
-    private static bool IsNotSerializableProperty(PropertyInfo property) => 
-        property.GetIndexParameters().Length > 0 || !property.CanRead || !property.CanWrite || IsIgnored(property);
 
     private static bool IsIgnored(MemberInfo member) => member.IsDefined(typeof(IgnoreSerializedAttribute), inherit: true);
 
@@ -78,10 +114,13 @@ internal static class TypeMetadataBuilder
         MemberInfo member,
         Type memberType,
         NamingPolicy? namingPolicy,
-        bool ignoreNull)
+        bool ignoreNull,
+        int? constructorParameterIndex)
     {
-        var serializedName = ResolveSerializedName(member, namingPolicy);
+        var nameAttribute = member.GetCustomAttribute<NameSerializedAttribute>(inherit: true);
+        var serializedName = ResolveSerializedName(member, nameAttribute, namingPolicy);
         var isRequired = member.IsDefined(typeof(RequiredSerializedAttribute), inherit: true);
+        var setter = member is PropertyInfo { CanWrite: false } ? null : CompileSetter(member, memberType);
 
         return new MemberMetadata(
             member.Name,
@@ -90,20 +129,20 @@ internal static class TypeMetadataBuilder
             isRequired,
             ignoreNull,
             CompileGetter(member),
-            CompileSetter(member, memberType));
+            setter,
+            nameAttribute?.Aliases,
+            constructorParameterIndex);
     }
 
-    private static string ResolveSerializedName(MemberInfo member, NamingPolicy? namingPolicy)
-    {
-        var custom = member.GetCustomAttribute<NameSerializedAttribute>(inherit: true);
-        return custom?.Name ?? namingPolicy?.ConvertName(member.Name) ?? member.Name;
-    }
+    private static string ResolveSerializedName(
+        MemberInfo member, NameSerializedAttribute? nameAttribute, NamingPolicy? namingPolicy) =>
+        nameAttribute?.Name ?? namingPolicy?.ConvertName(member.Name) ?? member.Name;
 
     [RequiresDynamicCode(ReflectionMessage)]
     private static Func<object, object?> CompileGetter(MemberInfo member)
     {
         var instance = Expression.Parameter(typeof(object), _instanceParameterName);
-        var typedInstance = Expression.Convert(instance, member.DeclaringType!);
+        var typedInstance = TypedInstanceExpression(instance, member.DeclaringType!);
         var access = Expression.MakeMemberAccess(typedInstance, member);
         var boxed = Expression.Convert(access, typeof(object));
 
@@ -115,11 +154,16 @@ internal static class TypeMetadataBuilder
     {
         var instance = Expression.Parameter(typeof(object), _instanceParameterName);
         var value = Expression.Parameter(typeof(object), _valueParameterName);
-        var typedInstance = Expression.Convert(instance, member.DeclaringType!);
+        var typedInstance = TypedInstanceExpression(instance, member.DeclaringType!);
         var typedValue = Expression.Convert(value, memberType);
         var access = Expression.MakeMemberAccess(typedInstance, member);
         var assign = Expression.Assign(access, typedValue);
 
         return Expression.Lambda<Action<object, object?>>(assign, instance, value).Compile();
     }
+
+    private static UnaryExpression TypedInstanceExpression(ParameterExpression instance, Type declaringType) =>
+        declaringType.IsValueType
+            ? Expression.Unbox(instance, declaringType)
+            : Expression.Convert(instance, declaringType);
 }

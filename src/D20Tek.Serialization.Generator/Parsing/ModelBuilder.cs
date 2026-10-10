@@ -1,5 +1,5 @@
-using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
+using System.Collections.Immutable;
 
 namespace D20Tek.Serialization.Generation;
 
@@ -10,10 +10,6 @@ namespace D20Tek.Serialization.Generation;
 /// </summary>
 internal static class ModelBuilder
 {
-    private const string SerializedNameAttribute = "D20Tek.Serialization.NameSerializedAttribute";
-    private const string IgnoreSerializedAttribute = "D20Tek.Serialization.IgnoreSerializedAttribute";
-    private const string RequiredSerializedAttribute = "D20Tek.Serialization.RequiredSerializedAttribute";
-
     public static SerializableTypeModel Build(INamedTypeSymbol type)
     {
         var diagnostics = ImmutableArray.CreateBuilder<DiagnosticInfo>();
@@ -27,21 +23,29 @@ internal static class ModelBuilder
                 new[] { type.Name }.ToImmutableArray().ToEquatableArray()));
         }
 
+        var constructorParameters = ResolveConstructorParameters(type);
+
         foreach (var property in EnumerateProperties(type))
         {
-            if (IsIgnored(property))
+            if (MemberAttributeResolver.IsIgnored(property))
             {
                 continue;
             }
 
-            if (property.SetMethod is null || property.SetMethod.DeclaredAccessibility != Accessibility.Public)
+            var constructorParameterName = constructorParameters is not null &&
+                constructorParameters.TryGetValue(property.Name, out var parameterName)
+                ? parameterName
+                : null;
+
+            if ((property.SetMethod is null || property.SetMethod.DeclaredAccessibility != Accessibility.Public) &&
+                constructorParameterName is null)
             {
                 diagnostics.Add(CreateDiagnostic(
                     DiagnosticDescriptors.InaccessibleSetter, property, type.Name, property.Name));
                 continue;
             }
 
-            if (!TryClassify(property.Type, out var strategy, out var isNullable))
+            if (!MemberStrategyClassifier.TryClassify(property.Type, out var strategy, out var isNullable))
             {
                 diagnostics.Add(CreateDiagnostic(
                     DiagnosticDescriptors.UnsupportedMemberType,
@@ -54,11 +58,14 @@ internal static class ModelBuilder
 
             members.Add(new MemberModel(
                 property.Name,
-                ResolveSerializedName(property),
-                property.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                MemberAttributeResolver.ResolveSerializedName(property),
+                FullyQualifiedTypeName(property.Type),
                 strategy,
                 isNullable,
-                IsRequired(property)));
+                MemberAttributeResolver.IsRequired(property),
+                MemberAttributeResolver.ResolveAliases(property),
+                property.SetMethod?.IsInitOnly ?? false,
+                constructorParameterName));
         }
 
         return new SerializableTypeModel(
@@ -69,6 +76,51 @@ internal static class ModelBuilder
             members.ToImmutable().ToEquatableArray(),
             diagnostics.ToImmutable().ToEquatableArray());
     }
+
+    /// <summary>
+    /// When <paramref name="type"/> has no accessible parameterless constructor, finds a public
+    /// constructor whose parameters can be matched (by name, case-insensitively) to the type's
+    /// serializable properties, so deserialization can construct the instance directly. Returns
+    /// <see langword="null"/> when a parameterless constructor is available (the existing
+    /// object-initializer/post-construction-assignment path should be used instead) or when no
+    /// suitable constructor can be found.
+    /// </summary>
+    private static Dictionary<string, string>? ResolveConstructorParameters(INamedTypeSymbol type)
+    {
+        var constructors = type.Constructors
+            .Where(c => !c.IsStatic && c.DeclaredAccessibility == Accessibility.Public)
+            .ToList();
+
+        if (constructors.Any(c => c.Parameters.Length == 0)) return null;
+
+        var properties = type.GetMembers()
+            .OfType<IPropertySymbol>()
+            .Where(p => !p.IsStatic && !p.IsIndexer && p.DeclaredAccessibility == Accessibility.Public)
+            .ToDictionary(p => p.Name, StringComparer.OrdinalIgnoreCase);
+
+        foreach (var constructor in constructors.OrderByDescending(c => c.Parameters.Length))
+        {
+            var mapping = new Dictionary<string, string>(StringComparer.Ordinal);
+            var matched = true;
+
+            foreach (var parameter in constructor.Parameters)
+            {
+                if (!properties.TryGetValue(parameter.Name, out var property) ||
+                    !SymbolEqualityComparer.Default.Equals(property.Type, parameter.Type))
+                {
+                    matched = false;
+                    break;
+                }
+
+                mapping[property.Name] = parameter.Name;
+            }
+
+            if (matched) return mapping;
+        }
+
+        return null;
+    }
+
 
     private static IEnumerable<IPropertySymbol> EnumerateProperties(INamedTypeSymbol type)
     {
@@ -87,91 +139,14 @@ internal static class ModelBuilder
         }
     }
 
-    private static bool TryClassify(ITypeSymbol type, out MemberStrategy strategy, out bool isNullable)
+    private static string FullyQualifiedTypeName(ITypeSymbol type)
     {
-        isNullable = false;
+        var format = SymbolDisplayFormat.FullyQualifiedFormat
+            .WithMiscellaneousOptions(
+                SymbolDisplayFormat.FullyQualifiedFormat.MiscellaneousOptions |
+                SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier);
 
-        if (type is INamedTypeSymbol { OriginalDefinition.SpecialType: SpecialType.System_Nullable_T } nullable &&
-            nullable.TypeArguments.Length == 1)
-        {
-            isNullable = true;
-            return TryClassifyCore(nullable.TypeArguments[0], out strategy);
-        }
-
-        if (type.IsReferenceType)
-        {
-            isNullable = type.NullableAnnotation != NullableAnnotation.NotAnnotated;
-        }
-
-        return TryClassifyCore(type, out strategy);
-    }
-
-    private static bool TryClassifyCore(ITypeSymbol type, out MemberStrategy strategy)
-    {
-        if (type.TypeKind == TypeKind.Enum)
-        {
-            strategy = MemberStrategy.Enum;
-            return true;
-        }
-
-        switch (type.SpecialType)
-        {
-            case SpecialType.System_Boolean:
-                strategy = MemberStrategy.Boolean;
-                return true;
-            case SpecialType.System_Byte:
-            case SpecialType.System_SByte:
-            case SpecialType.System_Int16:
-            case SpecialType.System_UInt16:
-            case SpecialType.System_Int32:
-            case SpecialType.System_UInt32:
-            case SpecialType.System_Int64:
-            case SpecialType.System_UInt64:
-                strategy = MemberStrategy.Int64;
-                return true;
-            case SpecialType.System_Single:
-            case SpecialType.System_Double:
-                strategy = MemberStrategy.Double;
-                return true;
-            case SpecialType.System_String:
-                strategy = MemberStrategy.String;
-                return true;
-            default:
-                strategy = default;
-                return false;
-        }
-    }
-
-    private static string? ResolveSerializedName(IPropertySymbol property)
-    {
-        foreach (var attribute in property.GetAttributes())
-        {
-            if (attribute.AttributeClass!.ToDisplayString() == SerializedNameAttribute &&
-                attribute.ConstructorArguments.Length == 1 &&
-                attribute.ConstructorArguments[0].Value is string name)
-            {
-                return name;
-            }
-        }
-
-        return null;
-    }
-
-    private static bool IsIgnored(IPropertySymbol property) => HasAttribute(property, IgnoreSerializedAttribute);
-
-    private static bool IsRequired(IPropertySymbol property) => HasAttribute(property, RequiredSerializedAttribute);
-
-    private static bool HasAttribute(ISymbol symbol, string attributeMetadataName)
-    {
-        foreach (var attribute in symbol.GetAttributes())
-        {
-            if (attribute.AttributeClass!.ToDisplayString() == attributeMetadataName)
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return type.ToDisplayString(format);
     }
 
     private static DiagnosticInfo CreateDiagnostic(DiagnosticDescriptor descriptor, ISymbol symbol, params string[] args) =>

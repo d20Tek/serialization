@@ -241,7 +241,7 @@ Documentation lives in the `/docs` folder and includes:
 
 ---
 
-## **🧪 Samples**
+## **Samples**
 
 The `/samples` directory includes:
 

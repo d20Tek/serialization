@@ -221,7 +221,7 @@ public sealed class TypeMetadataBuilderTests
         var instance = new SampleModel();
 
         // act
-        member.Setter(instance, "hello");
+        member.Setter!(instance, "hello");
 
         // assert
         Assert.AreEqual("hello", instance.Name);
@@ -236,12 +236,107 @@ public sealed class TypeMetadataBuilderTests
         var instance = new SampleModel();
 
         // act
-        member.Setter(instance, 77);
+        member.Setter!(instance, 77);
         var value = member.Getter(instance);
 
         // assert
         Assert.AreEqual(77, instance.Field);
         Assert.AreEqual(77, value);
+    }
+
+    [TestMethod]
+    public void Build_TypeWithoutParameterlessConstructor_ResolvesMatchingConstructor()
+    {
+        // arrange
+
+        // act
+        var metadata = TypeMetadataBuilder.Build(typeof(PositionalModel), new TestOptions(), includeFields: false);
+
+        // assert
+        Assert.IsNotNull(metadata.Constructor);
+        var idMember = metadata.Members.Single(m => m.Name == nameof(PositionalModel.Id));
+        var nameMember = metadata.Members.Single(m => m.Name == nameof(PositionalModel.Name));
+        Assert.AreEqual(0, idMember.ConstructorParameterIndex);
+        Assert.AreEqual(1, nameMember.ConstructorParameterIndex);
+        Assert.IsNull(idMember.Setter);
+        Assert.IsNull(nameMember.Setter);
+    }
+
+    [TestMethod]
+    public void Build_TypeWithConstructorAndExtraSettableProperty_MapsOnlyMatchedMember()
+    {
+        // arrange
+
+        // act
+        var metadata = TypeMetadataBuilder.Build(
+            typeof(PositionalModelWithExtraProperty), new TestOptions(), includeFields: false);
+
+        // assert
+        Assert.IsNotNull(metadata.Constructor);
+        var idMember = metadata.Members.Single(m => m.Name == nameof(PositionalModelWithExtraProperty.Id));
+        var extraMember = metadata.Members.Single(m => m.Name == nameof(PositionalModelWithExtraProperty.Extra));
+        Assert.AreEqual(0, idMember.ConstructorParameterIndex);
+        Assert.IsNull(idMember.Setter);
+        Assert.IsNull(extraMember.ConstructorParameterIndex);
+        Assert.IsNotNull(extraMember.Setter);
+    }
+
+    [TestMethod]
+    public void Build_TypeWithNoParameterlessOrMatchingConstructor_LeavesConstructorNull()
+    {
+        // arrange
+
+        // act
+        var metadata = TypeMetadataBuilder.Build(
+            typeof(UnmatchedConstructorModel), new TestOptions(), includeFields: false);
+
+        // assert
+        Assert.IsNull(metadata.Constructor);
+    }
+
+    [TestMethod]
+    public void Build_ValueType_DoesNotResolveConstructor()
+    {
+        // arrange
+
+        // act
+        var metadata = TypeMetadataBuilder.Build(typeof(SampleStruct), new TestOptions(), includeFields: false);
+
+        // assert
+        Assert.IsNull(metadata.Constructor);
+        var member = metadata.Members.Single(m => m.Name == nameof(SampleStruct.Value));
+        Assert.IsNotNull(member.Setter);
+    }
+
+    [TestMethod]
+    public void Build_ConstructorParameterNameMatchesIndexer_IsIgnoredAndConstructorNotResolved()
+    {
+        // arrange — the type has no parameterless constructor, and its only other public
+        // member whose name could match a parameter is an indexer, which must be excluded from
+        // the candidate-property lookup (GetIndexParameters().Length == 0 filter) so it cannot
+        // satisfy the constructor match.
+        var metadata = TypeMetadataBuilder.Build(
+            typeof(TypeWithIndexerOnly), new TestOptions(), includeFields: false);
+
+        // act
+
+        // assert
+        Assert.IsNull(metadata.Constructor);
+    }
+
+    [TestMethod]
+    public void Build_ConstructorParameterNameMatchesWriteOnlyProperty_ConstructorNotResolved()
+    {
+        // arrange — the type has no parameterless constructor, and the only property whose
+        // name matches the constructor parameter is write-only (CanRead is false), so it must
+        // be excluded from the candidate-property lookup and the constructor cannot be matched.
+        var metadata = TypeMetadataBuilder.Build(
+            typeof(TypeWithWriteOnlyPropertyOnly), new TestOptions(), includeFields: false);
+
+        // act
+
+        // assert
+        Assert.IsNull(metadata.Constructor);
     }
 
     private sealed class TestOptions : SerializerOptions
@@ -280,5 +375,68 @@ public sealed class TypeMetadataBuilderTests
             get => string.Empty;
             set { }
         }
+    }
+
+    [ExcludeFromCodeCoverage]
+    private sealed class PositionalModel(int id, string? name)
+    {
+        public int Id { get; } = id;
+
+        public string? Name { get; } = name;
+    }
+
+    [ExcludeFromCodeCoverage]
+    private sealed class PositionalModelWithExtraProperty(int id)
+    {
+        public int Id { get; } = id;
+
+        public string? Extra { get; set; }
+    }
+
+    [ExcludeFromCodeCoverage]
+    private sealed class UnmatchedConstructorModel(int unrelatedParameterName)
+    {
+        public int Value { get; } = unrelatedParameterName;
+    }
+
+    [ExcludeFromCodeCoverage]
+    private sealed class TypeWithIndexerOnly
+    {
+        private readonly int[] _values = new int[4];
+
+        public TypeWithIndexerOnly(int index)
+        {
+            _ = index;
+        }
+
+        // Named "index" to match the constructor parameter name, but as an indexer it must be
+        // excluded from the candidate-property lookup used to resolve the constructor.
+        public int this[int index]
+        {
+            get => _values[index];
+            set => _values[index] = value;
+        }
+    }
+
+    [ExcludeFromCodeCoverage]
+    private sealed class TypeWithWriteOnlyPropertyOnly
+    {
+        public TypeWithWriteOnlyPropertyOnly(int value)
+        {
+            Value = value;
+        }
+
+        // Named "value" to match the constructor parameter name, but write-only (no getter), so
+        // it must be excluded from the candidate-property lookup used to resolve the constructor.
+        public int Value
+        {
+            set { }
+        }
+    }
+
+    [ExcludeFromCodeCoverage]
+    private struct SampleStruct
+    {
+        public int Value { get; set; }
     }
 }

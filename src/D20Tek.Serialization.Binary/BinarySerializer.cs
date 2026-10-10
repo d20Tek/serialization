@@ -31,23 +31,26 @@ namespace D20Tek.Serialization;
 /// When <c>options</c> is <see langword="null"/>, a default
 /// <see cref="BinarySerializerOptions"/> instance is created automatically.
 /// </remarks>
-public static class BinarySerializer
+public static partial class BinarySerializer
 {
     /// <summary>
-    /// Deserializes a value of type <typeparamref name="T"/> from a CBOR-encoded byte span.
+    /// Deserializes a value of type <typeparamref name="T"/> from a CBOR-encoded byte buffer.
     /// </summary>
     /// <typeparam name="T">The type to deserialize.</typeparam>
-    /// <param name="data">The CBOR-encoded source bytes.</param>
+    /// <param name="data">
+    /// The CBOR-encoded source bytes. The underlying buffer is read directly without copying,
+    /// so it must remain alive and unmodified for the duration of this call.
+    /// </param>
     /// <param name="options">
     /// Optional serializer options. When <see langword="null"/>, defaults are used.
     /// </param>
     /// <returns>The deserialized value, or <see langword="null"/> for a CBOR null.</returns>
     [RequiresUnreferencedCode(SerializerResolutionHelper.ReflectionFallbackMessage)]
     [RequiresDynamicCode(SerializerResolutionHelper.ReflectionFallbackMessage)]
-    public static T? Deserialize<T>(ReadOnlySpan<byte> data, BinarySerializerOptions? options = null)
+    public static T? Deserialize<T>(ReadOnlyMemory<byte> data, BinarySerializerOptions? options = null)
     {
         var resolved = BinaryOptionsResolver.Resolve(options);
-        var reader = new CborFormatReader(data.ToArray(), resolved.DecodingMode);
+        var reader = new CborFormatReader(data, resolved.DecodingMode);
 
         // 1. Custom converter
         if (SerializerResolutionHelper.TryGetConverter<T>(resolved, out var converter))
@@ -67,9 +70,12 @@ public static class BinarySerializer
 
     /// <summary>
     /// Deserializes a value of the specified <paramref name="returnType"/> from a CBOR-encoded
-    /// byte span.
+    /// byte buffer.
     /// </summary>
-    /// <param name="data">The CBOR-encoded source bytes.</param>
+    /// <param name="data">
+    /// The CBOR-encoded source bytes. The underlying buffer is read directly without copying,
+    /// so it must remain alive and unmodified for the duration of this call.
+    /// </param>
     /// <param name="returnType">The type to deserialize.</param>
     /// <param name="options">
     /// Optional serializer options. When <see langword="null"/>, defaults are used.
@@ -82,19 +88,20 @@ public static class BinarySerializer
     /// </remarks>
     [RequiresUnreferencedCode(SerializerResolutionHelper.ReflectionFallbackMessage)]
     [RequiresDynamicCode(SerializerResolutionHelper.ReflectionFallbackMessage)]
-    public static object? Deserialize(ReadOnlySpan<byte> data, Type returnType, BinarySerializerOptions? options = null)
+    public static object? Deserialize(ReadOnlyMemory<byte> data, Type returnType, BinarySerializerOptions? options = null)
     {
         ArgumentNullException.ThrowIfNull(returnType);
 
         var resolved = BinaryOptionsResolver.Resolve(options);
-        var reader = new CborFormatReader(data.ToArray(), resolved.DecodingMode);
+        var reader = new CborFormatReader(data, resolved.DecodingMode);
 
         // 1. Custom converter — use the non-generic Read via Converter<T>.Read cast
         foreach (var candidate in resolved.Converters)
         {
             if (candidate.CanConvert(returnType))
             {
-                return SerializerResolutionHelper.ReadViaConverter(candidate, reader, resolved);
+                var converter = SerializerResolutionHelper.ResolveConverter(candidate, returnType);
+                return SerializerResolutionHelper.ReadViaConverter(converter, reader, resolved);
             }
         }
 
@@ -146,4 +153,5 @@ public static class BinarySerializer
         SerializerResolutionHelper.WriteValue(writer, value, resolved);
         writer.Encode(bufferWriter);
     }
+
 }

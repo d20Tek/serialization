@@ -52,7 +52,23 @@ Console.WriteLine($"  Longitude: {coordBack.Longitude}");
 Console.WriteLine($"  Altitude:  {coordBack.Altitude}");
 Console.WriteLine();
 
-// ─── 3. BinaryDocument DOM navigation (AOT-safe, no serializer needed) ───────
+// ─── 3. Positional record round-trip (constructor-based + init-only) ────────
+
+var address = new Address("1 Microsoft Way", "Redmond", "98052") { Country = "USA" };
+
+#pragma warning disable IL2026, IL3050 // Required for BinarySerializer; safe here via source-gen path
+byte[] addressBytes = BinarySerializer.SerializeToByteArray(address);
+var addressBack = BinarySerializer.Deserialize<Address>(addressBytes);
+#pragma warning restore IL2026, IL3050
+
+Console.WriteLine("=== Address positional record round-trip ===");
+Console.WriteLine($"  Street:     {addressBack!.Street}");
+Console.WriteLine($"  City:       {addressBack.City}");
+Console.WriteLine($"  PostalCode: {addressBack.PostalCode}");
+Console.WriteLine($"  Country:    {addressBack.Country}");
+Console.WriteLine();
+
+// ─── 4. BinaryDocument DOM navigation (AOT-safe, no serializer needed) ───────
 
 using var doc = BinaryDocument.Parse(customerBytes);
 Console.WriteLine("=== BinaryDocument DOM navigation ===");
@@ -68,7 +84,7 @@ foreach (var prop in doc.RootElement.EnumerateObject())
 Console.WriteLine();
 Console.WriteLine("Sample completed successfully.");
 
-// ─── 4. Order round-trip with enum converter ─────────────────────────────────
+// ─── 5. Order round-trip with enum converter ─────────────────────────────────
 
 var options = new BinarySerializerOptions();
 options.Converters.Add(new EnumCborConverter<OrderStatus>());
@@ -95,7 +111,7 @@ Console.WriteLine($"  Discount:       {orderBack.Discount}");
 Console.WriteLine($"  PreviousStatus: {orderBack.PreviousStatus}");
 Console.WriteLine();
 
-// ─── 5. Custom converter demo ────────────────────────────────────────────────
+// ─── 6. Custom converter demo ────────────────────────────────────────────────
 
 var customOptions = new BinarySerializerOptions();
 customOptions.Converters.Add(new UpperCaseStringConverter());

@@ -10,8 +10,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="D20Tek.Serialization.Binary" Version="0.10.2" />
-    <PackageReference Include="D20Tek.Serialization.Core" Version="0.10.2" />
+    <PackageReference Include="D20Tek.Serialization.Binary" Version="0.10.3" />
+    <PackageReference Include="D20Tek.Serialization.Core" Version="0.10.3" />
   </ItemGroup>
 
   <!-- Reference the PUBLISHED NuGet packages, not project references.

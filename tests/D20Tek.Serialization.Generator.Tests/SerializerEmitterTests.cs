@@ -216,9 +216,87 @@ public sealed class SerializerEmitterTests
     }
 
     [TestMethod]
-    public void Emit_NonRequiredMember_OmitsSeenFlag()
+    public void Emit_InitOnlyMember_UsesObjectInitializerConstruction()
     {
         // arrange
+        var model = ModelFactory.Type(
+            members: ModelFactory.Member("Id", MemberStrategy.Int64, isInitOnly: true));
+
+        // act
+        var source = SerializerEmitter.Emit(model);
+
+        // assert — construction is deferred to an object initializer via a local variable,
+        // instead of a post-construction `result.Id = ...` assignment that would be illegal
+        // for an init-only accessor.
+        Assert.DoesNotContain("result.Id = ", source);
+        Assert.Contains("__value_Id = (int)reader.GetInt64();", source);
+        Assert.Contains("Id = __value_Id,", source);
+        Assert.Contains("new global::Demo.Sample", source);
+    }
+
+    [TestMethod]
+    public void Emit_NoInitOnlyMembers_UsesPostConstructionAssignment()
+    {
+        // arrange
+        var model = ModelFactory.Type(
+            members: ModelFactory.Member("Id", MemberStrategy.Int64));
+
+        // act
+        var source = SerializerEmitter.Emit(model);
+
+        // assert
+        Assert.Contains("var result = new global::Demo.Sample();", source);
+        Assert.Contains("result.Id = (int)reader.GetInt64();", source);
+    }
+
+    [TestMethod]
+    public void Emit_AllMembersMatchConstructor_UsesConstructorInvocationOnly()
+    {
+        // arrange — a positional-record-style type where every member maps to a constructor
+        // parameter, so no object initializer is needed.
+        var model = ModelFactory.Type(
+            members:
+            [
+                ModelFactory.Member("Id", MemberStrategy.Int64, constructorParameterName: "id"),
+                ModelFactory.Member(
+                    "Name", MemberStrategy.String, isNullable: true, constructorParameterName: "name"),
+            ]);
+
+        // act
+        var source = SerializerEmitter.Emit(model);
+
+        // assert
+        Assert.Contains("var result = new global::Demo.Sample(id: __value_Id, name: __value_Name);", source);
+        Assert.DoesNotContain("result.Id = ", source);
+        Assert.DoesNotContain("result.Name = ", source);
+    }
+
+    [TestMethod]
+    public void Emit_MixOfConstructorAndInitOnlyMembers_UsesConstructorWithObjectInitializer()
+    {
+        // arrange — one member supplied through the constructor, another assigned through an
+        // object initializer because it has no matching constructor parameter.
+        var model = ModelFactory.Type(
+            members:
+            [
+                ModelFactory.Member("Id", MemberStrategy.Int64, constructorParameterName: "id"),
+                ModelFactory.Member("Name", MemberStrategy.String, isNullable: true, isInitOnly: true),
+            ]);
+
+        // act
+        var source = SerializerEmitter.Emit(model);
+
+        // assert
+        Assert.Contains("var result = new global::Demo.Sample(id: __value_Id)", source);
+        Assert.Contains("Name = __value_Name,", source);
+        Assert.DoesNotContain("result.Id = ", source);
+        Assert.DoesNotContain("result.Name = ", source);
+    }
+
+    [TestMethod]
+    public void Emit_NonRequiredMember_OmitsSeenFlag()
+    {
+
         var model = ModelFactory.Type(
             members: ModelFactory.Member("Id", MemberStrategy.Int64, isRequired: false));
 
@@ -303,6 +381,58 @@ public sealed class SerializerEmitterTests
         // assert
         Assert.Contains("if (__name == (", source);
         Assert.Contains("else if (__name == (", source);
+    }
+
+    [TestMethod]
+    public void Emit_MemberWithAliases_WriteUsesCanonicalNameOnly()
+    {
+        // arrange
+        var model = ModelFactory.Type(
+            members: ModelFactory.Member(
+                "Value",
+                MemberStrategy.String,
+                serializedName: "new_name",
+                aliases: ["old_name", "older_name"]));
+
+        // act
+        var source = SerializerEmitter.Emit(model);
+
+        // assert
+        Assert.Contains("writer.WritePropertyName(\"new_name\");", source);
+        Assert.DoesNotContain("writer.WritePropertyName(\"old_name\");", source);
+        Assert.DoesNotContain("writer.WritePropertyName(\"older_name\");", source);
+    }
+
+    [TestMethod]
+    public void Emit_MemberWithAliases_ReadMatchesCanonicalAndAliasNames()
+    {
+        // arrange
+        var model = ModelFactory.Type(
+            members: ModelFactory.Member(
+                "Value",
+                MemberStrategy.String,
+                serializedName: "new_name",
+                aliases: ["old_name", "older_name"]));
+
+        // act
+        var source = SerializerEmitter.Emit(model);
+
+        // assert
+        Assert.Contains("__name == (\"new_name\") || __name == \"old_name\" || __name == \"older_name\"", source);
+    }
+
+    [TestMethod]
+    public void Emit_MemberWithoutAliases_ReadMatchesCanonicalNameOnly()
+    {
+        // arrange
+        var model = ModelFactory.Type(
+            members: ModelFactory.Member("Value", MemberStrategy.String, serializedName: "new_name"));
+
+        // act
+        var source = SerializerEmitter.Emit(model);
+
+        // assert
+        Assert.Contains("if (__name == (\"new_name\"))", source);
     }
 
     [TestMethod]
