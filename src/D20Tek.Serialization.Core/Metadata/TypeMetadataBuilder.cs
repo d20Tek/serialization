@@ -142,7 +142,7 @@ internal static class TypeMetadataBuilder
     private static Func<object, object?> CompileGetter(MemberInfo member)
     {
         var instance = Expression.Parameter(typeof(object), _instanceParameterName);
-        var typedInstance = Expression.Convert(instance, member.DeclaringType!);
+        var typedInstance = TypedInstanceExpression(instance, member.DeclaringType!);
         var access = Expression.MakeMemberAccess(typedInstance, member);
         var boxed = Expression.Convert(access, typeof(object));
 
@@ -154,11 +154,16 @@ internal static class TypeMetadataBuilder
     {
         var instance = Expression.Parameter(typeof(object), _instanceParameterName);
         var value = Expression.Parameter(typeof(object), _valueParameterName);
-        var typedInstance = Expression.Convert(instance, member.DeclaringType!);
+        var typedInstance = TypedInstanceExpression(instance, member.DeclaringType!);
         var typedValue = Expression.Convert(value, memberType);
         var access = Expression.MakeMemberAccess(typedInstance, member);
         var assign = Expression.Assign(access, typedValue);
 
         return Expression.Lambda<Action<object, object?>>(assign, instance, value).Compile();
     }
+
+    private static UnaryExpression TypedInstanceExpression(ParameterExpression instance, Type declaringType) =>
+        declaringType.IsValueType
+            ? Expression.Unbox(instance, declaringType)
+            : Expression.Convert(instance, declaringType);
 }

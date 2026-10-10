@@ -59,7 +59,7 @@ internal static class ModelBuilder
             members.Add(new MemberModel(
                 property.Name,
                 MemberAttributeResolver.ResolveSerializedName(property),
-                property.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                FullyQualifiedTypeName(property.Type),
                 strategy,
                 isNullable,
                 MemberAttributeResolver.IsRequired(property),
@@ -137,6 +137,16 @@ internal static class ModelBuilder
                 yield return property;
             }
         }
+    }
+
+    private static string FullyQualifiedTypeName(ITypeSymbol type)
+    {
+        var format = SymbolDisplayFormat.FullyQualifiedFormat
+            .WithMiscellaneousOptions(
+                SymbolDisplayFormat.FullyQualifiedFormat.MiscellaneousOptions |
+                SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier);
+
+        return type.ToDisplayString(format);
     }
 
     private static DiagnosticInfo CreateDiagnostic(DiagnosticDescriptor descriptor, ISymbol symbol, params string[] args) =>
