@@ -37,7 +37,7 @@ internal sealed class SerializationPathBuilder
     /// <param name="index">The new array index.</param>
     public void SetIndex(int index)
     {
-        if (_segments.Count > 0 && _segments[_segments.Count - 1].IsArrayIndex)
+        if (_segments.Count > 0 && _segments[^1].IsArrayIndex)
         {
             _segments[^1] = PathSegment.ArrayIndex(index);
         }

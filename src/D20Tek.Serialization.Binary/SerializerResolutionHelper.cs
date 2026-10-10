@@ -25,6 +25,7 @@ internal static class SerializerResolutionHelper
         "for an AOT-safe path.";
 
     private static readonly ReflectionBinarySerializer s_reflectionSerializer = new();
+    private static readonly ConditionalWeakTable<ConverterFactory, ConcurrentDictionary<Type, Converter>> conditionalWeakTable = [];
 
     /// <summary>
     /// Caches converters created by <see cref="ConverterFactory.CreateConverter(Type)"/>,
@@ -32,7 +33,7 @@ internal static class SerializerResolutionHelper
     /// generic type does not re-invoke the factory on every call.
     /// </summary>
     private static readonly ConditionalWeakTable<ConverterFactory, ConcurrentDictionary<Type, Converter>>
-        s_factoryConverterCache = new();
+        s_factoryConverterCache = conditionalWeakTable;
 
     [RequiresUnreferencedCode(ReflectionFallbackMessage)]
     [RequiresDynamicCode(ReflectionFallbackMessage)]

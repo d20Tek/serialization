@@ -1,6 +1,5 @@
-using System.Collections.Immutable;
-using System.Linq;
 using Microsoft.CodeAnalysis;
+using System.Collections.Immutable;
 
 namespace D20Tek.Serialization.Generation;
 
@@ -11,10 +10,6 @@ namespace D20Tek.Serialization.Generation;
 /// </summary>
 internal static class ModelBuilder
 {
-    private const string SerializedNameAttribute = "D20Tek.Serialization.NameSerializedAttribute";
-    private const string IgnoreSerializedAttribute = "D20Tek.Serialization.IgnoreSerializedAttribute";
-    private const string RequiredSerializedAttribute = "D20Tek.Serialization.RequiredSerializedAttribute";
-
     public static SerializableTypeModel Build(INamedTypeSymbol type)
     {
         var diagnostics = ImmutableArray.CreateBuilder<DiagnosticInfo>();
@@ -30,7 +25,7 @@ internal static class ModelBuilder
 
         foreach (var property in EnumerateProperties(type))
         {
-            if (IsIgnored(property))
+            if (MemberAttributeResolver.IsIgnored(property))
             {
                 continue;
             }
@@ -42,7 +37,7 @@ internal static class ModelBuilder
                 continue;
             }
 
-            if (!TryClassify(property.Type, out var strategy, out var isNullable))
+            if (!MemberStrategyClassifier.TryClassify(property.Type, out var strategy, out var isNullable))
             {
                 diagnostics.Add(CreateDiagnostic(
                     DiagnosticDescriptors.UnsupportedMemberType,
@@ -55,12 +50,12 @@ internal static class ModelBuilder
 
             members.Add(new MemberModel(
                 property.Name,
-                ResolveSerializedName(property),
+                MemberAttributeResolver.ResolveSerializedName(property),
                 property.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
                 strategy,
                 isNullable,
-                IsRequired(property),
-                ResolveAliases(property)));
+                MemberAttributeResolver.IsRequired(property),
+                MemberAttributeResolver.ResolveAliases(property)));
         }
 
         return new SerializableTypeModel(
@@ -87,121 +82,6 @@ internal static class ModelBuilder
                 yield return property;
             }
         }
-    }
-
-    private static bool TryClassify(ITypeSymbol type, out MemberStrategy strategy, out bool isNullable)
-    {
-        isNullable = false;
-
-        if (type is INamedTypeSymbol { OriginalDefinition.SpecialType: SpecialType.System_Nullable_T } nullable &&
-            nullable.TypeArguments.Length == 1)
-        {
-            isNullable = true;
-            return TryClassifyCore(nullable.TypeArguments[0], out strategy);
-        }
-
-        if (type.IsReferenceType)
-        {
-            isNullable = type.NullableAnnotation != NullableAnnotation.NotAnnotated;
-        }
-
-        return TryClassifyCore(type, out strategy);
-    }
-
-    private static bool TryClassifyCore(ITypeSymbol type, out MemberStrategy strategy)
-    {
-        if (type.TypeKind == TypeKind.Enum)
-        {
-            strategy = MemberStrategy.Enum;
-            return true;
-        }
-
-        switch (type.SpecialType)
-        {
-            case SpecialType.System_Boolean:
-                strategy = MemberStrategy.Boolean;
-                return true;
-            case SpecialType.System_Byte:
-            case SpecialType.System_SByte:
-            case SpecialType.System_Int16:
-            case SpecialType.System_UInt16:
-            case SpecialType.System_Int32:
-            case SpecialType.System_UInt32:
-            case SpecialType.System_Int64:
-            case SpecialType.System_UInt64:
-                strategy = MemberStrategy.Int64;
-                return true;
-            case SpecialType.System_Single:
-            case SpecialType.System_Double:
-                strategy = MemberStrategy.Double;
-                return true;
-            case SpecialType.System_String:
-                strategy = MemberStrategy.String;
-                return true;
-            default:
-                strategy = default;
-                return false;
-        }
-    }
-
-    private static string? ResolveSerializedName(IPropertySymbol property)
-    {
-        foreach (var attribute in property.GetAttributes())
-        {
-            if (attribute.AttributeClass!.ToDisplayString() == SerializedNameAttribute &&
-                attribute.ConstructorArguments.Length >= 1 &&
-                attribute.ConstructorArguments[0].Value is string name)
-            {
-                return name;
-            }
-        }
-
-        return null;
-    }
-
-    private static EquatableArray<string> ResolveAliases(IPropertySymbol property)
-    {
-        foreach (var attribute in property.GetAttributes())
-        {
-            if (attribute.AttributeClass!.ToDisplayString() != SerializedNameAttribute)
-            {
-                continue;
-            }
-
-            // The aliases are passed via the `params string[] aliases` constructor parameter,
-            // which Roslyn surfaces as the second constructor argument whose kind is Array.
-            if (attribute.ConstructorArguments.Length >= 2 &&
-                attribute.ConstructorArguments[1].Kind == TypedConstantKind.Array &&
-                !attribute.ConstructorArguments[1].IsNull)
-            {
-                var values = attribute.ConstructorArguments[1].Values
-                    .Select(v => v.Value as string)
-                    .Where(v => v is not null)
-                    .Select(v => v!)
-                    .ToImmutableArray();
-
-                return values.ToEquatableArray();
-            }
-        }
-
-        return EquatableArray<string>.Empty;
-    }
-
-    private static bool IsIgnored(IPropertySymbol property) => HasAttribute(property, IgnoreSerializedAttribute);
-
-    private static bool IsRequired(IPropertySymbol property) => HasAttribute(property, RequiredSerializedAttribute);
-
-    private static bool HasAttribute(ISymbol symbol, string attributeMetadataName)
-    {
-        foreach (var attribute in symbol.GetAttributes())
-        {
-            if (attribute.AttributeClass!.ToDisplayString() == attributeMetadataName)
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private static DiagnosticInfo CreateDiagnostic(DiagnosticDescriptor descriptor, ISymbol symbol, params string[] args) =>

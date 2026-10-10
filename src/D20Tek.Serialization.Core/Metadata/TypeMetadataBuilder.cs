@@ -74,11 +74,7 @@ internal static class TypeMetadataBuilder
 
     [RequiresUnreferencedCode(ReflectionMessage)]
     [RequiresDynamicCode(ReflectionMessage)]
-    private static MemberMetadata CreateMember(
-        MemberInfo member,
-        Type memberType,
-        NamingPolicy? namingPolicy,
-        bool ignoreNull)
+    private static MemberMetadata CreateMember(MemberInfo member, Type memberType, NamingPolicy? namingPolicy, bool ignoreNull)
     {
         var nameAttribute = member.GetCustomAttribute<NameSerializedAttribute>(inherit: true);
         var serializedName = ResolveSerializedName(member, nameAttribute, namingPolicy);
