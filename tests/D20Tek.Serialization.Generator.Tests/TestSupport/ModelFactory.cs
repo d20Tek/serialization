@@ -18,6 +18,8 @@ internal static class ModelFactory
         string? serializedName = null,
         bool isNullable = false,
         bool isRequired = false,
+        bool isInitOnly = false,
+        string? constructorParameterName = null,
         params string[] aliases) =>
         new(
             name,
@@ -26,7 +28,9 @@ internal static class ModelFactory
             strategy,
             isNullable,
             isRequired,
-            aliases.ToImmutableArray().ToEquatableArray());
+            aliases.ToImmutableArray().ToEquatableArray(),
+            isInitOnly,
+            constructorParameterName);
 
     public static SerializableTypeModel Type(
         string typeName = "Sample",

@@ -24,7 +24,19 @@ internal static class ReadMemberEmitter
             writer.Line();
         }
 
-        writer.Line($"var result = new {model.FullyQualifiedName}();");
+        var useLocals = model.Members.Any(m => m.IsInitOnly || m.ConstructorParameterName is not null);
+
+        if (useLocals)
+        {
+            foreach (var member in model.Members)
+            {
+                writer.Line($"{member.FullyQualifiedTypeName} {LocalName(member)} = default!;");
+            }
+        }
+        else
+        {
+            writer.Line($"var result = new {model.FullyQualifiedName}();");
+        }
 
         foreach (var member in model.Members)
         {
@@ -51,7 +63,7 @@ internal static class ReadMemberEmitter
                 first = false;
                 writer.Line($"{keyword} ({ReadNameConditionExpression(member)})");
                 writer.OpenBrace();
-                EmitReadMember(writer, member);
+                EmitReadMember(writer, member, useLocals);
                 if (member.IsRequired)
                 {
                     writer.Line($"__seen_{member.MemberName} = true;");
@@ -83,13 +95,55 @@ internal static class ReadMemberEmitter
             }
         }
 
+        if (useLocals)
+        {
+            var constructorMembers = model.Members.Where(m => m.ConstructorParameterName is not null).ToList();
+            var initializerMembers = model.Members.Where(m => m.ConstructorParameterName is null).ToList();
+
+            if (constructorMembers.Count > 0)
+            {
+                var arguments = string.Join(
+                    ", ",
+                    constructorMembers.Select(m => $"{m.ConstructorParameterName}: {LocalName(m)}"));
+
+                if (initializerMembers.Count > 0)
+                {
+                    writer.Line($"var result = new {model.FullyQualifiedName}({arguments})");
+                    writer.OpenBrace();
+                    foreach (var member in initializerMembers)
+                    {
+                        writer.Line($"{member.MemberName} = {LocalName(member)},");
+                    }
+
+                    writer.CloseBrace(";");
+                }
+                else
+                {
+                    writer.Line($"var result = new {model.FullyQualifiedName}({arguments});");
+                }
+            }
+            else
+            {
+                writer.Line($"var result = new {model.FullyQualifiedName}");
+                writer.OpenBrace();
+                foreach (var member in model.Members)
+                {
+                    writer.Line($"{member.MemberName} = {LocalName(member)},");
+                }
+
+                writer.CloseBrace(";");
+            }
+        }
+
         writer.Line("return result;");
         writer.CloseBrace();
     }
 
-    private static void EmitReadMember(SourceWriter writer, MemberModel member)
+    private static string LocalName(MemberModel member) => $"__value_{member.MemberName}";
+
+    private static void EmitReadMember(SourceWriter writer, MemberModel member, bool useObjectInitializer)
     {
-        var target = $"result.{member.MemberName}";
+        var target = useObjectInitializer ? LocalName(member) : $"result.{member.MemberName}";
 
         if (member.IsNullable)
         {

@@ -54,21 +54,60 @@ public sealed class RecordAndInitOnlyReflectionTests
     }
 
     [TestMethod]
-    public void RoundTrip_PositionalRecord_WithoutParameterlessConstructor_ThrowsOnDeserialize()
+    public void RoundTrip_PositionalRecord_WithoutParameterlessConstructor_PreservesValues()
     {
-        // arrange — a positional record's primary constructor requires arguments, and
-        // ReadObject calls Activator.CreateInstance(actualType) with no args, so there is no
-        // parameterless constructor to satisfy.
+        // arrange — a positional record's primary constructor requires arguments;
+        // ReadObject now resolves a matching public constructor by parameter name and invokes
+        // it with the buffered member values instead of requiring a parameterless constructor.
         var options = new BinarySerializerOptions();
         var original = new PositionalRecord(3, "Carol");
 
         // act
         var bytes = Serialize(original, options);
+        var result = Deserialize<PositionalRecord>(bytes, options);
 
-        // assert — documents the current gap: positional records without a parameterless
-        // constructor are not supported by the reflection fallback.
+        // assert
+        Assert.IsNotNull(result);
+        Assert.AreEqual(3, result.Id);
+        Assert.AreEqual("Carol", result.Name);
+    }
+
+    [TestMethod]
+    public void RoundTrip_PositionalRecordWithAdditionalMutableProperty_PreservesValues()
+    {
+        // arrange — a positional record with an extra settable property not covered by the
+        // primary constructor: the constructor-matched members are supplied via the invoked
+        // constructor, and the remaining settable member is assigned afterward.
+        var options = new BinarySerializerOptions();
+        var original = new PositionalRecordWithExtraProperty(4, "Dave") { Nickname = "D" };
+
+        // act
+        var bytes = Serialize(original, options);
+        var result = Deserialize<PositionalRecordWithExtraProperty>(bytes, options);
+
+        // assert
+        Assert.IsNotNull(result);
+        Assert.AreEqual(4, result.Id);
+        Assert.AreEqual("Dave", result.Name);
+        Assert.AreEqual("D", result.Nickname);
+    }
+
+    [TestMethod]
+    public void RoundTrip_TypeWithNoMatchingConstructorOrParameterlessConstructor_ThrowsOnDeserialize()
+    {
+        // arrange — no public parameterless constructor and no public constructor whose
+        // parameters all match serializable properties by name/type, so no constructor can be
+        // resolved and the reflection fallback falls back to Activator.CreateInstance, which
+        // fails because there is no parameterless constructor to satisfy.
+        var options = new BinarySerializerOptions();
+        var original = new TypeWithUnmatchedConstructor(5);
+
+        // act
+        var bytes = Serialize(original, options);
+
+        // assert
         Assert.ThrowsExactly<MissingMethodException>(
-            [ExcludeFromCodeCoverage] () => Deserialize<PositionalRecord>(bytes, options));
+            [ExcludeFromCodeCoverage] () => Deserialize<TypeWithUnmatchedConstructor>(bytes, options));
     }
 
     // --- Helpers ---
@@ -101,4 +140,29 @@ public sealed class RecordAndInitOnlyReflectionTests
     }
 
     public sealed record PositionalRecord(int Id, string? Name);
+
+    public sealed class PositionalRecordWithExtraProperty
+    {
+        public PositionalRecordWithExtraProperty(int id, string? name)
+        {
+            Id = id;
+            Name = name;
+        }
+
+        public int Id { get; }
+
+        public string? Name { get; }
+
+        public string? Nickname { get; set; }
+    }
+
+    public sealed class TypeWithUnmatchedConstructor
+    {
+        public TypeWithUnmatchedConstructor(int unrelatedParameterName)
+        {
+            Value = unrelatedParameterName;
+        }
+
+        public int Value { get; }
+    }
 }

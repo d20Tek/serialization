@@ -39,7 +39,8 @@ public sealed class RecordAndInitOnlyGeneratorTests
     }
 
     [TestMethod]
-    public void Generate_RecordWithInitOnlyProperties_ProducesNonCompilingOutput()
+    [ExcludeFromCodeCoverage]
+    public void Generate_RecordWithInitOnlyProperties_ProducesCompilingOutput()
     {
         // arrange — a positional/init-only record, the idiomatic modern C# shape
         const string source = """
@@ -56,15 +57,13 @@ public sealed class RecordAndInitOnlyGeneratorTests
         // act
         var result = TestSupport.GeneratorRunResult.Run(source);
 
-        // assert — the generator does not reject init-only accessors as unsupported...
+        // assert — the generator does not reject init-only accessors as unsupported, and now
+        // routes construction through an object initializer so init-only properties compile.
         Assert.IsTrue(result.GeneratorDiagnostics.IsEmpty);
-
-        // ...but the emitted Read method assigns via `result.Member = value;` after
-        // construction, which is illegal for `init`-only accessors (CS8852), so the
-        // generated output fails to compile. This documents the current gap.
         var errors = result.GetCompilationErrors();
-        Assert.IsFalse(errors.IsEmpty, "Expected init-only accessors to currently fail to compile (CS8852).");
-        Assert.Contains(d => d.Id == "CS8852", errors);
+        Assert.IsTrue(
+            errors.IsEmpty,
+            $"Generated output failed to compile: {string.Join("; ", errors.Select(e => e.GetMessage()))}");
     }
 
     [TestMethod]
@@ -87,5 +86,31 @@ public sealed class RecordAndInitOnlyGeneratorTests
 
         // assert
         Assert.DoesNotContain([ExcludeFromCodeCoverage](d) => d.Id == "D20SER002", result.GeneratorDiagnostics);
+    }
+
+    [TestMethod]
+    [ExcludeFromCodeCoverage]
+    public void Generate_PositionalRecord_ProducesCompilingOutputViaConstructor()
+    {
+        // arrange — a positional record has no parameterless constructor, so the generator
+        // must match its get-only properties to the primary constructor's parameters by name.
+        const string source = """
+            namespace Sample.Models;
+
+            [D20Tek.Serialization.Serializable]
+            public sealed record Person(int Id, string? Name);
+            """;
+
+        // act
+        var result = TestSupport.GeneratorRunResult.Run(source);
+
+        // assert — the get-only Id/Name properties are matched to the primary constructor's
+        // parameters instead of being reported as having an inaccessible setter, and the
+        // generated Read method constructs the record through that constructor.
+        Assert.DoesNotContain([ExcludeFromCodeCoverage](d) => d.Id == "D20SER002", result.GeneratorDiagnostics);
+        var errors = result.GetCompilationErrors();
+        Assert.IsTrue(
+            errors.IsEmpty,
+            $"Generated output failed to compile: {string.Join("; ", errors.Select(e => e.GetMessage()))}");
     }
 }

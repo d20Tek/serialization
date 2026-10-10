@@ -1,3 +1,5 @@
+using System.Reflection;
+
 namespace D20Tek.Serialization.Metadata;
 
 /// <summary>
@@ -9,7 +11,12 @@ namespace D20Tek.Serialization.Metadata;
 /// </remarks>
 /// <param name="type">The type the metadata describes.</param>
 /// <param name="members">The ordered serializable members of the type.</param>
-internal sealed class TypeMetadata(Type type, IReadOnlyList<MemberMetadata> members)
+/// <param name="constructor">
+/// The constructor to invoke when the type has no accessible parameterless constructor and a
+/// matching constructor was found; otherwise <see langword="null"/>, in which case
+/// <see cref="Activator.CreateInstance(Type)"/> is used.
+/// </param>
+internal sealed class TypeMetadata(Type type, IReadOnlyList<MemberMetadata> members, ConstructorInfo? constructor = null)
 {
     /// <summary>
     /// Gets the type the metadata describes.
@@ -20,4 +27,10 @@ internal sealed class TypeMetadata(Type type, IReadOnlyList<MemberMetadata> memb
     /// Gets the ordered serializable members of the type.
     /// </summary>
     public IReadOnlyList<MemberMetadata> Members { get; } = members;
+
+    /// <summary>
+    /// Gets the constructor to invoke when the type has no accessible parameterless
+    /// constructor and a matching constructor was found; otherwise <see langword="null"/>.
+    /// </summary>
+    public ConstructorInfo? Constructor { get; } = constructor;
 }

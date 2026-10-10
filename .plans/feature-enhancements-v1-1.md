@@ -80,7 +80,7 @@
     object-initializer syntax in `Read`, and/or constructor-based construction for both the
     generator and reflection fallback to support positional records.)*
 
-- [ ] **P2 — Source generator: support `init`-only property accessors.**
+- [x] **P2 — Source generator: support `init`-only property accessors.**
   `ModelBuilder` accepts `init`-only properties as having an accessible setter, but
   `SerializerEmitter.EmitReadMember` assigns them via `result.Member = value;` after
   construction, which fails to compile with `CS8852` for `init`-only properties. Emit via
@@ -88,8 +88,14 @@
   assignment for types whose serializable members are all settable via an object initializer,
   so `init`-only properties are supported as documented in the v1.1 record/init-only audit
   above.
+  *(Resolved: `MemberModel` now carries an `IsInitOnly` flag, populated in `ModelBuilder` from
+  the property's `SetMethod.IsInitOnly`. `ReadMemberEmitter.EmitRead` detects whether any
+  member on the type is `init`-only; if so, it declares a local variable per member, assigns
+  into those locals during the read loop, and constructs the result via an object initializer
+  after the required-member checks. Types with no `init`-only members continue to use the
+  original post-construction assignment path unchanged.)*
 
-- [ ] **P2 — Constructor-based construction for positional records / types without a
+- [x] **P2 — Constructor-based construction for positional records / types without a
   parameterless constructor.**
   Both the reflection fallback (`ReflectionBinarySerializer.ReadObject`, via
   `Activator.CreateInstance(actualType)`) and the generated `Read` method
@@ -212,8 +218,8 @@ Based on priority and risk, a reasonable first pass at v1.1 scope:
 | P1 | ~~Record / init-only property support audit~~ (audited, gaps documented) | Binary |
 | P1 | ~~Converter factories for open generics~~ (done) | Core |
 | P1 | ~~Field rename aliasing~~ (done) | Core |
-| P2 | Source generator: support `init`-only property accessors | Binary |
-| P2 | Constructor-based construction for positional records | Binary |
+| P2 | ~~Source generator: support `init`-only property accessors~~ (done) | Binary |
+| P2 | ~~Constructor-based construction for positional records~~ (done) | Binary |
 
 Remaining P2/P3 items can be deferred to v1.2 or picked up opportunistically.
 

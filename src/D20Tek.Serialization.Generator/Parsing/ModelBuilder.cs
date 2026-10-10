@@ -23,6 +23,8 @@ internal static class ModelBuilder
                 new[] { type.Name }.ToImmutableArray().ToEquatableArray()));
         }
 
+        var constructorParameters = ResolveConstructorParameters(type);
+
         foreach (var property in EnumerateProperties(type))
         {
             if (MemberAttributeResolver.IsIgnored(property))
@@ -30,7 +32,13 @@ internal static class ModelBuilder
                 continue;
             }
 
-            if (property.SetMethod is null || property.SetMethod.DeclaredAccessibility != Accessibility.Public)
+            var constructorParameterName = constructorParameters is not null &&
+                constructorParameters.TryGetValue(property.Name, out var parameterName)
+                ? parameterName
+                : null;
+
+            if ((property.SetMethod is null || property.SetMethod.DeclaredAccessibility != Accessibility.Public) &&
+                constructorParameterName is null)
             {
                 diagnostics.Add(CreateDiagnostic(
                     DiagnosticDescriptors.InaccessibleSetter, property, type.Name, property.Name));
@@ -55,7 +63,9 @@ internal static class ModelBuilder
                 strategy,
                 isNullable,
                 MemberAttributeResolver.IsRequired(property),
-                MemberAttributeResolver.ResolveAliases(property)));
+                MemberAttributeResolver.ResolveAliases(property),
+                property.SetMethod?.IsInitOnly ?? false,
+                constructorParameterName));
         }
 
         return new SerializableTypeModel(
@@ -66,6 +76,51 @@ internal static class ModelBuilder
             members.ToImmutable().ToEquatableArray(),
             diagnostics.ToImmutable().ToEquatableArray());
     }
+
+    /// <summary>
+    /// When <paramref name="type"/> has no accessible parameterless constructor, finds a public
+    /// constructor whose parameters can be matched (by name, case-insensitively) to the type's
+    /// serializable properties, so deserialization can construct the instance directly. Returns
+    /// <see langword="null"/> when a parameterless constructor is available (the existing
+    /// object-initializer/post-construction-assignment path should be used instead) or when no
+    /// suitable constructor can be found.
+    /// </summary>
+    private static Dictionary<string, string>? ResolveConstructorParameters(INamedTypeSymbol type)
+    {
+        var constructors = type.Constructors
+            .Where(c => !c.IsStatic && c.DeclaredAccessibility == Accessibility.Public)
+            .ToList();
+
+        if (constructors.Any(c => c.Parameters.Length == 0)) return null;
+
+        var properties = type.GetMembers()
+            .OfType<IPropertySymbol>()
+            .Where(p => !p.IsStatic && !p.IsIndexer && p.DeclaredAccessibility == Accessibility.Public)
+            .ToDictionary(p => p.Name, StringComparer.OrdinalIgnoreCase);
+
+        foreach (var constructor in constructors.OrderByDescending(c => c.Parameters.Length))
+        {
+            var mapping = new Dictionary<string, string>(StringComparer.Ordinal);
+            var matched = true;
+
+            foreach (var parameter in constructor.Parameters)
+            {
+                if (!properties.TryGetValue(parameter.Name, out var property) ||
+                    !SymbolEqualityComparer.Default.Equals(property.Type, parameter.Type))
+                {
+                    matched = false;
+                    break;
+                }
+
+                mapping[property.Name] = parameter.Name;
+            }
+
+            if (matched) return mapping;
+        }
+
+        return null;
+    }
+
 
     private static IEnumerable<IPropertySymbol> EnumerateProperties(INamedTypeSymbol type)
     {

@@ -38,17 +38,16 @@ internal sealed partial class ReflectionBinarySerializer
         }
 
         var metadata = _provider.GetOrAdd(actualType, options, options.IncludeFields);
-        var instance = Activator.CreateInstance(actualType)!;
         var memberLookup = ConversionHelper.BuildMemberLookup(metadata);
         var seen = new HashSet<string>();
+        var values = new Dictionary<string, object?>();
 
         while (reader.TryReadPropertyName(out var name))
         {
             if (memberLookup.TryGetValue(name, out var member))
             {
                 var memberPath = $"{parentPath}.{member.SerializedName}";
-                var value = ReadValue(reader, member.MemberType, options, memberPath);
-                member.Setter(instance, value);
+                values[member.Name] = ReadValue(reader, member.MemberType, options, memberPath);
                 seen.Add(member.Name);
             }
             else
@@ -68,6 +67,47 @@ internal sealed partial class ReflectionBinarySerializer
                 throw new SerializationException(
                     $"Missing required property '{member.SerializedName}'.",
                     path);
+            }
+        }
+
+        object instance;
+        if (metadata.Constructor is not null)
+        {
+            var parameters = metadata.Constructor.GetParameters();
+            var arguments = new object?[parameters.Length];
+            foreach (var member in metadata.Members)
+            {
+                if (member.ConstructorParameterIndex is int index)
+                {
+                    values.TryGetValue(member.Name, out var value);
+                    arguments[index] = value;
+                }
+            }
+
+            instance = metadata.Constructor.Invoke(arguments);
+
+            foreach (var member in metadata.Members)
+            {
+                if (member.ConstructorParameterIndex is null && member.Setter is not null &&
+                    values.TryGetValue(member.Name, out var value))
+                {
+                    member.Setter(instance, value);
+                }
+            }
+        }
+        else
+        {
+            instance = Activator.CreateInstance(actualType)!;
+
+            // When there is no resolved constructor, every included member has a compiled
+            // setter (see TypeMetadataBuilder.Build), so only the presence of a read value
+            // needs to be checked here.
+            foreach (var member in metadata.Members)
+            {
+                if (values.TryGetValue(member.Name, out var value))
+                {
+                    member.Setter!(instance, value);
+                }
             }
         }
 

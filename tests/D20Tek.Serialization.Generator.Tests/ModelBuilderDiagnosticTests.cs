@@ -1,6 +1,5 @@
 using D20Tek.Serialization.Generation;
 using D20Tek.Serialization.Generator.Tests.TestSupport;
-using System.Linq;
 
 namespace D20Tek.Serialization.Generator.Tests;
 
