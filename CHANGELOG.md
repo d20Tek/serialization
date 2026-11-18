@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.10.5]
+
+### Changed
+- Updated package references to the lastest .net10 versions.
+- Required .NET version updated to 10.0.402 for security patch to source generation.
+
 ## [v0.10.4]
 
 ### Added

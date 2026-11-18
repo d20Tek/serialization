@@ -7,9 +7,7 @@
   <Folder Name="/samples/">
     <Project Path="samples/D20Tek.Serialization.Binary.PackageValidation/D20Tek.Serialization.Binary.PackageValidation.csproj" />
     <Project Path="samples/D20Tek.Serialization.Binary.SampleAOT/D20Tek.Serialization.Binary.SampleAOT.csproj" />
-    <Project Path="samples/D20Tek.Serialization.Binary.SampleReflected/D20Tek.Serialization.Binary.SampleReflected.csproj">
-      <Build Solution="Debug|*" Project="false" />
-    </Project>
+    <Project Path="samples/D20Tek.Serialization.Binary.SampleReflected/D20Tek.Serialization.Binary.SampleReflected.csproj" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/D20Tek.Serialization.Binary/D20Tek.Serialization.Binary.csproj" />

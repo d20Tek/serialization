@@ -10,8 +10,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="D20Tek.Serialization.Binary" Version="0.10.3" />
-    <PackageReference Include="D20Tek.Serialization.Core" Version="0.10.3" />
+    <PackageReference Include="D20Tek.Serialization.Binary" Version="0.10.4" />
+    <PackageReference Include="D20Tek.Serialization.Core" Version="0.10.4" />
+
+    <!-- Direct pins override vulnerable transitive dependencies from the published packages. -->
+    <PackageReference Include="System.Formats.Cbor" Version="10.0.15" />
+    <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="10.0.15" PrivateAssets="all" />
   </ItemGroup>
 
   <!-- Reference the PUBLISHED NuGet packages, not project references.
